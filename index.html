@@ -1,0 +1,2261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Savwinch | Meta Ads Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --bg: #f5f7fa;
+    --white: #ffffff;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --border-light: #f0f1f3;
+    --text: #1a1d2e;
+    --text-secondary: #5f6577;
+    --text-muted: #9ca3b4;
+    --accent: #4361ee;
+    --accent-light: #eef1ff;
+    --accent-hover: #3a56d4;
+    --green: #10b981;
+    --green-light: #ecfdf5;
+    --green-dark: #059669;
+    --red: #ef4444;
+    --red-light: #fef2f2;
+    --purple: #8b5cf6;
+    --purple-light: #f5f3ff;
+    --yellow: #f59e0b;
+    --yellow-light: #fffbeb;
+    --blue: #3b82f6;
+    --blue-light: #eff6ff;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.03);
+    --shadow-lg: 0 10px 25px rgba(0,0,0,0.08);
+    --radius: 14px;
+    --radius-sm: 10px;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+  /* Animations */
+  @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+  @keyframes slideIn { from { opacity:0; transform:translateX(-10px); } to { opacity:1; transform:translateX(0); } }
+  @keyframes scaleIn { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+  @keyframes countUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes shimmer { 0% { background-position:-200% 0; } 100% { background-position:200% 0; } }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.7; } }
+  .animate-up { animation: fadeUp 0.5s ease forwards; opacity:0; }
+  .animate-in { animation: fadeIn 0.4s ease forwards; opacity:0; }
+  .animate-scale { animation: scaleIn 0.4s ease forwards; opacity:0; }
+  .stagger-1 { animation-delay: 0.05s; }
+  .stagger-2 { animation-delay: 0.1s; }
+  .stagger-3 { animation-delay: 0.15s; }
+  .stagger-4 { animation-delay: 0.2s; }
+  .stagger-5 { animation-delay: 0.25s; }
+  .stagger-6 { animation-delay: 0.3s; }
+  .stagger-7 { animation-delay: 0.35s; }
+  .stagger-8 { animation-delay: 0.4s; }
+
+  /* Header */
+  .header { background:var(--white); border-bottom:1px solid var(--border); padding:20px 32px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; animation:fadeIn 0.3s ease; }
+  .header-left { display:flex; align-items:center; gap:14px; }
+  .logo { width:42px; height:42px; background:linear-gradient(135deg,#4361ee,#7c3aed); border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px; color:#fff; box-shadow:0 4px 12px rgba(67,97,238,0.3); }
+  .header h1 { font-size:20px; font-weight:700; letter-spacing:-0.3px; }
+  .header-sub { color:var(--text-muted); font-size:12px; font-weight:500; margin-top:1px; }
+  .header-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+
+  /* Buttons */
+  .btn { padding:9px 18px; border-radius:10px; border:none; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s ease; display:inline-flex; align-items:center; gap:7px; font-family:inherit; }
+  .btn:active { transform:scale(0.97); }
+  .btn-primary { background:var(--accent); color:#fff; box-shadow:0 2px 8px rgba(67,97,238,0.25); }
+  .btn-primary:hover { background:var(--accent-hover); box-shadow:0 4px 12px rgba(67,97,238,0.35); transform:translateY(-1px); }
+  .btn-outline { background:var(--white); color:var(--text); border:1.5px solid var(--border); }
+  .btn-outline:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-light); }
+  .btn-green { background:var(--green); color:#fff; box-shadow:0 2px 8px rgba(16,185,129,0.25); }
+  .btn-green:hover { background:var(--green-dark); transform:translateY(-1px); }
+  .date-pill { padding:8px 14px; background:var(--bg); border-radius:8px; font-size:12px; color:var(--text-secondary); font-weight:500; }
+
+  /* Tabs */
+  .tabs { background:var(--white); padding:0 32px; border-bottom:1px solid var(--border); display:flex; gap:0; overflow-x:auto; }
+  .tab { padding:14px 20px; font-size:13px; font-weight:600; color:var(--text-muted); cursor:pointer; border-bottom:2.5px solid transparent; transition:all 0.25s ease; white-space:nowrap; position:relative; }
+  .tab:hover { color:var(--text-secondary); }
+  .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .tab-panel { display:none; padding:24px 32px; }
+  .tab-panel.active { display:block; animation:fadeIn 0.3s ease; }
+
+  /* KPI Cards */
+  .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-bottom:24px; }
+  .kpi { background:var(--card); border:1.5px solid var(--border); border-radius:var(--radius); padding:20px; transition:all 0.3s ease; cursor:default; position:relative; overflow:hidden; }
+  .kpi:hover { border-color:var(--accent); box-shadow:var(--shadow-md); transform:translateY(-3px); }
+  .kpi::after { content:''; position:absolute; top:0; left:0; right:0; height:3px; border-radius:var(--radius) var(--radius) 0 0; opacity:0; transition:opacity 0.3s; }
+  .kpi:hover::after { opacity:1; }
+  .kpi.accent::after { background:var(--accent); }
+  .kpi.green::after { background:var(--green); }
+  .kpi.purple::after { background:var(--purple); }
+  .kpi.red::after { background:var(--red); }
+  .kpi-icon { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; margin-bottom:12px; }
+  .kpi-icon.blue { background:var(--blue-light); }
+  .kpi-icon.green { background:var(--green-light); }
+  .kpi-icon.purple { background:var(--purple-light); }
+  .kpi-icon.red { background:var(--red-light); }
+  .kpi-icon.yellow { background:var(--yellow-light); }
+  .kpi-label { font-size:11px; text-transform:uppercase; letter-spacing:0.7px; color:var(--text-muted); font-weight:600; margin-bottom:6px; }
+  .kpi-val { font-size:24px; font-weight:800; letter-spacing:-0.5px; margin-bottom:4px; }
+  .kpi-val.green { color:var(--green); }
+  .kpi-val.red { color:var(--red); }
+  .kpi-sub { font-size:12px; color:var(--text-muted); font-weight:500; }
+
+  /* Charts */
+  .charts-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; }
+  .chart-card { background:var(--card); border:1.5px solid var(--border); border-radius:var(--radius); padding:22px; box-shadow:var(--shadow-sm); transition:box-shadow 0.3s; }
+  .chart-card:hover { box-shadow:var(--shadow-md); }
+  .chart-card.full { grid-column:1/-1; }
+  .chart-title { font-size:14px; font-weight:700; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+  .chart-title span { font-size:16px; }
+  .chart-box { position:relative; height:280px; }
+  .chart-box.tall { height:320px; }
+
+  /* Campaign Cards */
+  .campaign-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:16px; margin-bottom:24px; }
+  .camp-card { background:var(--card); border:1.5px solid var(--border); border-radius:var(--radius); padding:0; overflow:hidden; transition:all 0.3s ease; cursor:default; }
+  .camp-card:hover { border-color:var(--accent); box-shadow:var(--shadow-lg); transform:translateY(-4px); }
+
+  /* Campaign Image Area */
+  .camp-img-zone { position:relative; width:100%; aspect-ratio:1/1; background:var(--bg); display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; border-bottom:1px solid var(--border-light); transition:all 0.3s ease; }
+  .camp-img-zone:hover { background:#eef1ff; }
+  .camp-img-zone.dragover { background:var(--accent-light); border:2px dashed var(--accent); }
+  .camp-img-zone img { width:100%; height:100%; object-fit:cover; display:block; }
+  .camp-img-placeholder { text-align:center; padding:24px; }
+  .camp-img-placeholder .icon { font-size:32px; margin-bottom:8px; opacity:0.5; }
+  .camp-img-placeholder p { font-size:12px; color:var(--text-muted); font-weight:500; }
+  .camp-img-placeholder p strong { color:var(--accent); }
+  .camp-img-remove { position:absolute; top:8px; right:8px; width:28px; height:28px; border-radius:6px; background:rgba(0,0,0,0.6); border:none; color:#fff; font-size:14px; cursor:pointer; display:none; align-items:center; justify-content:center; transition:all 0.2s; backdrop-filter:blur(4px); }
+  .camp-img-zone:hover .camp-img-remove { display:flex; }
+  .camp-img-remove:hover { background:var(--red); }
+
+  .camp-top { padding:18px 20px 14px; border-bottom:1px solid var(--border-light); }
+  .camp-name { font-size:14px; font-weight:700; margin-bottom:4px; line-height:1.3; }
+  .camp-ads { font-size:12px; color:var(--text-muted); line-height:1.4; margin-bottom:10px; }
+  .camp-badges { display:flex; gap:6px; flex-wrap:wrap; }
+  .badge { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; }
+  .badge-lead { background:var(--accent-light); color:var(--accent); }
+  .badge-awareness { background:var(--purple-light); color:var(--purple); }
+  .badge-quality { background:var(--green-light); color:var(--green-dark); }
+  .badge-quality.avg { background:var(--yellow-light); color:var(--yellow); }
+  .badge-quality.low { background:var(--red-light); color:var(--red); }
+  .camp-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:0; }
+  .camp-stat { padding:12px 16px; text-align:center; border-right:1px solid var(--border-light); }
+  .camp-stat:last-child { border-right:none; }
+  .camp-stat-val { font-size:16px; font-weight:700; letter-spacing:-0.3px; }
+  .camp-stat-label { font-size:10px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); font-weight:600; margin-top:2px; }
+  .camp-bottom { display:grid; grid-template-columns:repeat(4,1fr); gap:0; border-top:1px solid var(--border-light); background:var(--bg); }
+  .camp-mini { padding:10px 12px; text-align:center; }
+  .camp-mini-val { font-size:13px; font-weight:700; }
+  .camp-mini-label { font-size:9px; text-transform:uppercase; letter-spacing:0.4px; color:var(--text-muted); font-weight:600; }
+
+  /* Benchmark cards */
+  .bench-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:16px; margin-bottom:24px; }
+  .bench-card { background:var(--card); border:1.5px solid var(--border); border-radius:var(--radius); padding:20px; position:relative; overflow:hidden; }
+  .bench-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+  .bench-card.above::before { background:var(--green); }
+  .bench-card.below::before { background:var(--red); }
+  .bench-card.on-par::before { background:var(--yellow); }
+  .bench-header { display:flex; justify-content:space-between; align-items:start; margin-bottom:12px; }
+  .bench-metric { font-size:11px; text-transform:uppercase; letter-spacing:0.7px; color:var(--text-muted); font-weight:600; }
+  .bench-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:6px; font-size:10px; font-weight:700; }
+  .bench-badge.above { background:var(--green-light); color:var(--green-dark); }
+  .bench-badge.below { background:var(--red-light); color:var(--red); }
+  .bench-badge.on-par { background:var(--yellow-light); color:var(--yellow); }
+  .bench-values { display:flex; gap:24px; align-items:baseline; margin-bottom:8px; }
+  .bench-yours { font-size:24px; font-weight:800; letter-spacing:-0.5px; }
+  .bench-yours.green { color:var(--green); }
+  .bench-yours.red { color:var(--red); }
+  .bench-industry { font-size:14px; color:var(--text-muted); font-weight:500; }
+  .bench-bar { height:8px; border-radius:4px; background:var(--bg); margin:10px 0 8px; position:relative; overflow:hidden; }
+  .bench-bar-fill { height:100%; border-radius:4px; transition:width 0.6s ease; }
+  .bench-note { font-size:12px; color:var(--text-secondary); line-height:1.5; }
+  .bench-section-title { font-size:16px; font-weight:700; margin:28px 0 14px; display:flex; align-items:center; gap:8px; }
+  .bench-section-title:first-child { margin-top:0; }
+
+  /* Campaign benchmark table */
+  .bench-camp-row { display:grid; grid-template-columns:1fr 80px 80px 80px 60px; gap:8px; padding:10px 14px; border-bottom:1px solid var(--border-light); align-items:center; font-size:13px; }
+  .bench-camp-row.header { font-size:10px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); font-weight:600; background:var(--bg); border-radius:8px 8px 0 0; }
+
+  .camp-revenue { display:grid; grid-template-columns:repeat(3,1fr); gap:0; border-top:1.5px solid var(--accent-light); background:linear-gradient(135deg, var(--accent-light) 0%, #f5f3ff 100%); }
+  .camp-rev-stat { padding:10px 14px; text-align:center; border-right:1px solid rgba(67,97,238,0.1); }
+  .camp-rev-stat:last-child { border-right:none; }
+  .camp-rev-val { font-size:14px; font-weight:700; letter-spacing:-0.3px; }
+  .camp-rev-val.green { color:var(--green); }
+  .camp-rev-val.red { color:var(--red); }
+  .camp-rev-label { font-size:9px; text-transform:uppercase; letter-spacing:0.5px; color:var(--accent); font-weight:600; margin-top:2px; }
+
+  /* Tables */
+  .tbl-card { background:var(--card); border:1.5px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow-sm); margin-bottom:24px; }
+  .tbl-header { display:flex; justify-content:space-between; align-items:center; padding:18px 22px; border-bottom:1px solid var(--border); }
+  .tbl-header h3 { font-size:14px; font-weight:700; }
+  .tbl-meta { color:var(--text-muted); font-size:12px; font-weight:500; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { text-align:left; padding:10px 14px; color:var(--text-muted); font-weight:600; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid var(--border); background:var(--bg); position:sticky; top:0; z-index:2; }
+  th.r,td.r { text-align:right; }
+  td { padding:11px 14px; border-bottom:1px solid var(--border-light); transition:background 0.15s; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:var(--accent-light); }
+  tr.total-row td { font-weight:700; background:var(--bg); border-top:2px solid var(--border); }
+  .tbl-scroll { max-height:420px; overflow-y:auto; }
+
+  /* Upload */
+  .upload-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:100; align-items:center; justify-content:center; backdrop-filter:blur(6px); }
+  .upload-overlay.active { display:flex; animation:fadeIn 0.2s ease; }
+  .upload-modal { background:var(--white); border-radius:20px; padding:40px; max-width:520px; width:90%; text-align:center; position:relative; box-shadow:var(--shadow-lg); animation:scaleIn 0.3s ease; }
+  .upload-modal h2 { font-size:20px; font-weight:700; margin-bottom:6px; }
+  .upload-modal p { color:var(--text-muted); margin-bottom:24px; font-size:14px; }
+  .drop-zone { border:2px dashed var(--border); border-radius:14px; padding:44px 24px; cursor:pointer; transition:all 0.25s; margin-bottom:20px; }
+  .drop-zone:hover,.drop-zone.dragover { border-color:var(--accent); background:var(--accent-light); }
+  .drop-icon { font-size:36px; margin-bottom:10px; }
+  .drop-text { color:var(--text-muted); font-size:14px; }
+  .drop-text strong { color:var(--accent); }
+  .hint { background:var(--bg); border-radius:10px; padding:14px 16px; text-align:left; font-size:12px; color:var(--text-muted); line-height:1.6; }
+  .hint strong { color:var(--text); }
+  .close-btn { position:absolute; top:16px; right:16px; background:var(--bg); border:none; width:32px; height:32px; border-radius:8px; font-size:18px; cursor:pointer; color:var(--text-muted); display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
+  .close-btn:hover { background:var(--red-light); color:var(--red); }
+
+  /* Empty state */
+  .empty { text-align:center; padding:80px 32px; animation:fadeUp 0.5s ease; }
+  .empty-icon { font-size:56px; margin-bottom:16px; }
+  .empty h2 { font-size:22px; font-weight:700; margin-bottom:8px; }
+  .empty p { color:var(--text-muted); margin-bottom:28px; max-width:420px; margin-left:auto; margin-right:auto; line-height:1.6; }
+
+  /* Toast */
+  .toast { position:fixed; bottom:24px; right:24px; background:var(--white); border:1.5px solid var(--green); border-radius:12px; padding:14px 20px; display:flex; align-items:center; gap:10px; font-size:14px; font-weight:500; z-index:200; transform:translateY(80px); opacity:0; transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1); box-shadow:var(--shadow-lg); }
+  .toast.show { transform:translateY(0); opacity:1; }
+
+  /* Action Plan */
+  .action-section { margin-bottom:24px; }
+  .action-section-title { font-size:16px; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:10px; }
+  .action-section-title span { font-size:20px; }
+  .insight-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:14px; }
+  .insight-card { background:var(--card); border:1.5px solid var(--border); border-radius:var(--radius); padding:20px; transition:all 0.3s; }
+  .insight-card:hover { border-color:var(--accent); box-shadow:var(--shadow-md); transform:translateY(-2px); }
+  .insight-card.positive { border-left:4px solid var(--green); }
+  .insight-card.negative { border-left:4px solid var(--red); }
+  .insight-card.neutral { border-left:4px solid var(--accent); }
+  .insight-card.action { border-left:4px solid var(--purple); }
+  .insight-icon { font-size:24px; margin-bottom:8px; }
+  .insight-title { font-size:14px; font-weight:700; margin-bottom:6px; }
+  .insight-body { font-size:13px; color:var(--text-secondary); line-height:1.6; }
+  .insight-metric { font-size:20px; font-weight:800; margin:8px 0; }
+  .insight-metric.green { color:var(--green); }
+  .insight-metric.red { color:var(--red); }
+
+  .step-list { list-style:none; counter-reset:steps; }
+  .step-item { background:var(--card); border:1.5px solid var(--border); border-radius:var(--radius); padding:20px 20px 20px 64px; margin-bottom:12px; position:relative; transition:all 0.3s; }
+  .step-item:hover { border-color:var(--accent); box-shadow:var(--shadow-md); }
+  .step-item::before { counter-increment:steps; content:counter(steps); position:absolute; left:18px; top:18px; width:32px; height:32px; border-radius:10px; background:var(--accent); color:#fff; font-size:14px; font-weight:800; display:flex; align-items:center; justify-content:center; }
+  .step-title { font-size:14px; font-weight:700; margin-bottom:4px; }
+  .step-body { font-size:13px; color:var(--text-secondary); line-height:1.6; }
+  .step-tag { display:inline-block; padding:3px 10px; border-radius:6px; font-size:11px; font-weight:600; margin-top:8px; }
+  .step-tag.quick { background:var(--green-light); color:var(--green-dark); }
+  .step-tag.medium { background:var(--yellow-light); color:var(--yellow); }
+  .step-tag.strategic { background:var(--purple-light); color:var(--purple); }
+
+  .priority-label { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; }
+  .priority-high { background:var(--red-light); color:var(--red); }
+  .priority-med { background:var(--yellow-light); color:var(--yellow); }
+  .priority-low { background:var(--green-light); color:var(--green-dark); }
+
+  /* Responsive */
+  @media(max-width:900px) {
+    .charts-grid,.campaign-grid { grid-template-columns:1fr; }
+    .tab-panel { padding:16px; }
+    .header { padding:16px; }
+    .tabs { padding:0 16px; }
+  }
+  @media print {
+    /* Hide UI chrome */
+    .header, .tabs, .btn, #emptyState, .toast,
+    .camp-img-remove, .camp-img-placeholder,
+    .upload-overlay, .modal { display:none!important; }
+
+    /* Reset page background */
+    * { -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; color-adjust:exact!important; }
+    html, body { background:#fff!important; margin:0; padding:0; }
+
+    /* Show all tabs stacked */
+    .tab-panel { display:block!important; padding:20px 24px!important; page-break-inside:avoid; }
+    .tab-panel:not(:first-of-type) { page-break-before:always; }
+
+    /* Print header per tab */
+    .tab-panel::before {
+      content: attr(data-print-title);
+      display:block; background:var(--accent); color:#fff; padding:10px 18px;
+      font-size:14px; font-weight:700; border-radius:8px; margin-bottom:16px;
+      font-family:'Inter',system-ui,sans-serif;
+    }
+
+    /* Keep cards and charts visible */
+    .kpi, .chart-card, .camp-card, .insight-card, .step-item {
+      break-inside:avoid; box-shadow:none!important; border:1px solid #ddd!important;
+    }
+    .camp-card { break-inside:avoid; page-break-inside:avoid; }
+
+    /* Charts: ensure canvas prints */
+    canvas { max-width:100%!important; height:auto!important; }
+
+    /* Campaign images should show */
+    .camp-img-zone { aspect-ratio:1/1; }
+    .camp-img-zone img { width:100%; height:100%; object-fit:cover; }
+
+    /* Footer on every page */
+    @page { margin: 10mm 12mm 14mm 12mm; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo">S</div>
+    <div>
+      <h1>Savwinch Ads Dashboard</h1>
+      <div class="header-sub" id="dateRange">Upload data to get started</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div class="date-pill" id="lastUpdated">Last updated: --</div>
+    <button class="btn btn-outline" onclick="openUpload('ads')">&#x1F4CA; Upload Ads CSV</button>
+    <button class="btn btn-green" onclick="openUpload('sales')">&#x1F9FE; Upload Sales CSV</button>
+    <button class="btn btn-primary" onclick="exportPDF()" id="btnExportPdf" style="display:none;">&#x1F4C4; Export PDF</button>
+    <button class="btn btn-outline" onclick="exportShareable()" id="btnShare" style="display:none;">&#x1F4E6; Export Dashboard</button>
+  </div>
+</div>
+
+<div class="tabs" id="tabBar">
+  <div class="tab active" onclick="switchTab('overview')">Overview</div>
+  <div class="tab" onclick="switchTab('campaigns')">Campaigns</div>
+  <div class="tab" onclick="switchTab('profit')">Cost vs Sales</div>
+  <div class="tab" onclick="switchTab('geo')">AUS vs USA</div>
+<div class="tab" onclick="switchTab('monthly')">Monthly</div>
+  <div class="tab" onclick="switchTab('benchmarks')">Benchmarks</div>
+  <div class="tab" onclick="switchTab('action')">Action Plan</div>
+</div>
+
+<!-- Empty State -->
+<div class="empty" id="emptyState">
+  <div class="empty-icon">&#x1F680;</div>
+  <h2>Ready to analyse your Meta Ads</h2>
+  <p>Upload your Ads Manager CSV export and optional sales data to see a full performance and profitability breakdown.</p>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+    <button class="btn btn-primary" onclick="openUpload('ads')">&#x1F4CA; Upload Ads CSV</button>
+    <button class="btn btn-green" onclick="openUpload('sales')">&#x1F9FE; Upload Sales CSV</button>
+  </div>
+  <br>
+  <button class="btn btn-outline" onclick="loadDemoData()" style="margin:0 auto;">Load March 2026 demo data</button>
+</div>
+
+<!-- ===== OVERVIEW ===== -->
+<div class="tab-panel active" id="panel-overview" data-print-title="Savwinch Meta Ads Report — Overview">
+  <div class="kpi-grid" id="overviewKpis"></div>
+  <div class="charts-grid">
+    <div class="chart-card full"><div class="chart-title"><span>&#x1F4B0;</span> Spend &amp; Results by Campaign</div><div class="chart-box tall"><canvas id="chartOverview"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title"><span>&#x1F3AF;</span> Results Distribution</div><div class="chart-box"><canvas id="chartDoughnut"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title"><span>&#x1F4E3;</span> Reach vs Impressions</div><div class="chart-box"><canvas id="chartReach"></canvas></div></div>
+  </div>
+</div>
+
+<!-- ===== CAMPAIGNS ===== -->
+<div class="tab-panel" id="panel-campaigns" data-print-title="Savwinch Meta Ads Report — Campaigns">
+  <div class="kpi-grid" id="campKpis"></div>
+  <div class="campaign-grid" id="campaignGrid"></div>
+  <div id="campPLTable"></div>
+  <div class="charts-grid">
+    <div class="chart-card"><div class="chart-title"><span>&#x1F4B2;</span> Cost per Result</div><div class="chart-box tall"><canvas id="chartCPR"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title"><span>&#x1F517;</span> CTR vs CPC (bubble = spend)</div><div class="chart-box tall"><canvas id="chartBubble"></canvas></div></div>
+  </div>
+</div>
+
+<!-- ===== COST VS SALES ===== -->
+<div class="tab-panel" id="panel-profit" data-print-title="Savwinch Meta Ads Report — Cost vs Sales">
+  <div class="kpi-grid" id="profitKpis"></div>
+  <div class="charts-grid">
+    <div class="chart-card full"><div class="chart-title"><span>&#x1F4CA;</span> Ad Spend vs Sales Revenue</div><div class="chart-box tall"><canvas id="chartProfit"></canvas></div></div>
+  </div>
+  <div class="tbl-card">
+    <div class="tbl-header"><h3>&#x1F9FE; Sales Attributed to Meta Ads</h3><span class="tbl-meta" id="salesMeta"></span></div>
+    <div class="tbl-scroll"><table><thead><tr><th>#</th><th>Customer</th><th>Ad Source</th><th>Invoice</th><th>Date</th><th class="r">Amount</th></tr></thead><tbody id="salesTBody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- ===== AUS VS USA ===== -->
+<div class="tab-panel" id="panel-geo" data-print-title="Savwinch Meta Ads Report — AUS vs USA">
+  <div class="kpi-grid" id="geoKpis"></div>
+  <div class="charts-grid">
+    <div class="chart-card"><div class="chart-title"><span>&#x1F30F;</span> Ad Spend by Region</div><div class="chart-box"><canvas id="chartGeoSpend"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title"><span>&#x1F4B0;</span> Revenue by Region</div><div class="chart-box"><canvas id="chartGeoRev"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title"><span>&#x1F3AF;</span> Leads &amp; Results by Region</div><div class="chart-box"><canvas id="chartGeoLeads"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title"><span>&#x1F4C8;</span> ROI Comparison</div><div class="chart-box"><canvas id="chartGeoROI"></canvas></div></div>
+  </div>
+  <div id="geoTables"></div>
+</div>
+
+<!-- ===== MONTHLY COMPARISON ===== -->
+<div class="tab-panel" id="panel-monthly" data-print-title="Savwinch Meta Ads Report — Monthly Comparison">
+  <div class="kpi-grid" id="monthlyKpis"></div>
+  <div class="charts-grid">
+    <div class="chart-card full"><div class="chart-title"><span>&#x1F4C5;</span> Month-over-Month Trends</div><div class="chart-box tall"><canvas id="chartMonthly"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title"><span>&#x1F4B2;</span> Spend Trend</div><div class="chart-box"><canvas id="chartMonthlySpend"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title"><span>&#x1F3AF;</span> Leads Trend</div><div class="chart-box"><canvas id="chartMonthlyLeads"></canvas></div></div>
+  </div>
+  <div id="monthlyTable"></div>
+</div>
+
+<!-- ===== BENCHMARKS ===== -->
+<div class="tab-panel" id="panel-benchmarks" data-print-title="Savwinch Meta Ads Report — Industry Benchmarks">
+  <div id="benchmarkContent"></div>
+</div>
+
+<!-- ===== ACTION PLAN ===== -->
+<div class="tab-panel" id="panel-action" data-print-title="Savwinch Meta Ads Report — Action Plan">
+  <div id="actionContent"></div>
+</div>
+
+<!-- Upload: Ads -->
+<div class="upload-overlay" id="uploadOverlay-ads" onclick="if(event.target===this)closeUpload('ads')">
+  <div class="upload-modal">
+    <button class="close-btn" onclick="closeUpload('ads')">&times;</button>
+    <h2>Upload Meta Ads CSV</h2>
+    <p>Drag &amp; drop your Ads Manager export</p>
+    <div class="drop-zone" id="dropZone-ads" onclick="document.getElementById('fileInput-ads').click()">
+      <div class="drop-icon">&#x1F4C1;</div>
+      <div class="drop-text">Drop <strong>.csv</strong> here or <strong>click to browse</strong></div>
+    </div>
+    <input type="file" id="fileInput-ads" accept=".csv" style="display:none" onchange="handleAdsFile(this.files[0])">
+    <div class="hint"><strong>Auto-detects</strong> Meta Ads Manager columns: Campaign name, Amount spent, Results, Reach, Impressions, CPM, Link clicks, CPC, CTR, Cost per result, etc.</div>
+  </div>
+</div>
+
+<!-- Upload: Sales -->
+<div class="upload-overlay" id="uploadOverlay-sales" onclick="if(event.target===this)closeUpload('sales')">
+  <div class="upload-modal">
+    <button class="close-btn" onclick="closeUpload('sales')">&times;</button>
+    <h2>Upload Sales / Invoice CSV</h2>
+    <p>Add your sales data to see profitability</p>
+    <div class="drop-zone" id="dropZone-sales" onclick="document.getElementById('fileInput-sales').click()">
+      <div class="drop-icon">&#x1F9FE;</div>
+      <div class="drop-text">Drop <strong>.csv</strong> here or <strong>click to browse</strong></div>
+    </div>
+    <input type="file" id="fileInput-sales" accept=".csv" style="display:none" onchange="handleSalesFile(this.files[0])">
+    <div class="hint"><strong>Expected:</strong> customer, ad_id (or source), invoice, date, amount (or total/revenue)</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const pn = v => { if(v==null||v==='') return 0; return parseFloat(String(v).replace(/[$,%"]/g,'').replace(/,/g,''))||0; };
+const fd = v => '$'+v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+const fn = v => v.toLocaleString(undefined,{maximumFractionDigits:0});
+const fp = v => v.toFixed(2)+'%';
+
+const COLORS = ['#4361ee','#10b981','#8b5cf6','#f59e0b','#ef4444','#06b6d4','#f97316','#ec4899','#14b8a6','#6366f1','#f43f5e'];
+const CHART_OPTS = {
+  responsive:true,maintainAspectRatio:false,
+  interaction:{intersect:false,mode:'index'},
+  plugins:{
+    legend:{labels:{color:'#5f6577',font:{family:'Inter',size:12,weight:'500'},usePointStyle:true,pointStyle:'circle',padding:16}},
+    tooltip:{backgroundColor:'#fff',titleColor:'#1a1d2e',bodyColor:'#5f6577',borderColor:'#e5e7eb',borderWidth:1,padding:14,cornerRadius:10,titleFont:{weight:'700'},boxPadding:4}
+  },
+  scales:{
+    x:{ticks:{color:'#9ca3b4',font:{family:'Inter',size:10}},grid:{color:'#f0f1f3'}},
+    y:{ticks:{color:'#9ca3b4',font:{family:'Inter',size:11}},grid:{color:'#f0f1f3'}}
+  }
+};
+
+let campaigns=[], salesData=[], charts={}, campImages={};
+
+// Tabs
+function switchTab(name) {
+  const tabs=['overview','campaigns','profit','geo','monthly','benchmarks','action'];
+  document.querySelectorAll('#tabBar .tab').forEach((t,i)=> t.classList.toggle('active',tabs[i]===name));
+  document.querySelectorAll('.tab-panel').forEach(p => {
+    const isActive = p.id==='panel-'+name;
+    p.classList.toggle('active', isActive);
+    p.style.display = isActive ? 'block' : 'none';
+  });
+}
+
+// Upload
+function openUpload(t){$('uploadOverlay-'+t).classList.add('active');}
+function closeUpload(t){$('uploadOverlay-'+t).classList.remove('active');}
+['ads','sales'].forEach(t=>{
+  const dz=$('dropZone-'+t);
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('dragover');});
+  dz.addEventListener('dragleave',()=>dz.classList.remove('dragover'));
+  dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('dragover');if(e.dataTransfer.files.length){t==='ads'?handleAdsFile(e.dataTransfer.files[0]):handleSalesFile(e.dataTransfer.files[0]);}});
+});
+
+function findCol(h,a){const l=h.map(x=>x.toLowerCase().trim());for(const k of a){const i=l.findIndex(x=>x.includes(k));if(i!==-1)return h[i];}return null;}
+
+function handleAdsFile(file){
+  if(!file)return;
+  Papa.parse(file,{header:true,skipEmptyLines:true,complete:function(r){
+    const h=r.meta.fields;
+    const c={
+      campaign:findCol(h,['campaign name','campaign']),ads:findCol(h,['ads','ad name']),
+      resultType:findCol(h,['result type']),results:findCol(h,['results']),
+      reach:findCol(h,['reach']),frequency:findCol(h,['frequency']),
+      cpr:findCol(h,['cost per result']),spend:findCol(h,['amount spent','spend','cost']),
+      impressions:findCol(h,['impressions']),cpm:findCol(h,['cpm','cost per 1,000']),
+      linkClicks:findCol(h,['link clicks']),cpc:findCol(h,['cpc (cost per link','cpc']),
+      ctr:findCol(h,['ctr (link','ctr']),allClicks:findCol(h,['clicks (all)']),
+      allCtr:findCol(h,['ctr (all)']),lpViews:findCol(h,['landing page views']),
+      starts:findCol(h,['reporting starts']),ends:findCol(h,['reporting ends']),
+      quality:findCol(h,['quality ranking'])
+    };
+    if(!c.spend){showToast('No "Amount spent" column found.',true);return;}
+    campaigns=r.data.map(row=>({
+      campaign:row[c.campaign]||'Unknown',ads:row[c.ads]||'',resultType:row[c.resultType]||'',
+      results:pn(row[c.results]),reach:pn(row[c.reach]),frequency:pn(row[c.frequency]),
+      cpr:pn(row[c.cpr]),spend:pn(row[c.spend]),impressions:pn(row[c.impressions]),
+      cpm:pn(row[c.cpm]),linkClicks:pn(row[c.linkClicks]),cpc:pn(row[c.cpc]),
+      ctr:pn(row[c.ctr]),allClicks:pn(row[c.allClicks]),allCtr:pn(row[c.allCtr]),
+      lpViews:pn(row[c.lpViews]),starts:row[c.starts]||'',ends:row[c.ends]||'',
+      quality:row[c.quality]||'-'
+    })).filter(x=>x.spend>0);
+    campaigns.sort((a,b)=>b.spend-a.spend);
+    closeUpload('ads');renderAll();saveSessionData();showToast('Loaded '+campaigns.length+' campaigns');
+  },error:()=>showToast('Error parsing CSV.',true)});
+}
+
+function handleSalesFile(file){
+  if(!file)return;
+  Papa.parse(file,{header:true,skipEmptyLines:true,complete:function(r){
+    const h=r.meta.fields;
+    const c={customer:findCol(h,['customer','name','buyer']),ad_id:findCol(h,['ad_id','campaign','fb','source']),invoice:findCol(h,['invoice','order']),date:findCol(h,['date','order_date','invoice_date']),amount:findCol(h,['amount','total','revenue','sale','value'])};
+    if(!c.amount){showToast('No amount column found.',true);return;}
+    // Skip summary rows (subtotals, totals, section headers, verification notes, blanks)
+    const skipWords = ['subtotal','total','---','verification','overlap','status','march 2026','verified','minimal'];
+    salesData=r.data.map(row=>({customer:row[c.customer]||'',ad_id:row[c.ad_id]||'',invoice:row[c.invoice]||'',date:row[c.date]||'',amount:pn(row[c.amount])})).filter(x=>{
+      if(x.amount<=0) return false;
+      const cust = x.customer.toLowerCase().trim();
+      if(!cust || cust==='unknown') return false;
+      if(skipWords.some(w=>cust.includes(w))) return false;
+      return true;
+    });
+    salesData.sort((a,b)=>b.amount-a.amount);
+    closeUpload('sales');renderAll();saveSessionData();showToast('Loaded '+salesData.length+' sales orders');
+  },error:()=>showToast('Error parsing CSV.',true)});
+}
+
+function renderAll(){
+  $('emptyState').style.display='none';
+  // Ensure at least one tab is active
+  const hasActive = document.querySelector('.tab-panel.active');
+  if(!hasActive) document.querySelector('.tab-panel').classList.add('active');
+  // Show/hide panels
+  document.querySelectorAll('.tab-panel').forEach(p=>{
+    p.style.display = p.classList.contains('active') ? 'block' : 'none';
+  });
+  if(campaigns.length){
+    const s=campaigns[0].starts, e=campaigns[0].ends;
+    $('dateRange').textContent = s&&e ? s+' to '+e : campaigns.length+' campaigns';
+  }
+  $('lastUpdated').textContent='Updated: '+new Date().toLocaleDateString();
+  $('btnExportPdf').style.display='inline-flex';
+  $('btnShare').style.display='inline-flex';
+  renderOverview();renderCampaigns();renderProfit();renderGeo();renderMonthly();renderBenchmarks();renderActionPlan();
+}
+
+// ===== OVERVIEW =====
+function renderOverview(){
+  if(!campaigns.length)return;
+  const t=campaigns.reduce((s,c)=>{s.spend+=c.spend;s.results+=c.results;s.reach+=c.reach;s.impr+=c.impressions;s.clicks+=c.linkClicks;return s;},{spend:0,results:0,reach:0,impr:0,clicks:0});
+  const leads=campaigns.filter(c=>c.resultType.toLowerCase().includes('lead'));
+  const aware=campaigns.filter(c=>c.resultType.toLowerCase().includes('reach'));
+  const leadR=leads.reduce((s,c)=>s+c.results,0);
+  const leadS=leads.reduce((s,c)=>s+c.spend,0);
+
+  $('overviewKpis').innerHTML=`
+    <div class="kpi accent animate-up stagger-1"><div class="kpi-icon blue">&#x1F4B5;</div><div class="kpi-label">Total Ad Spend</div><div class="kpi-val">${fd(t.spend)}</div><div class="kpi-sub">${campaigns.length} active campaigns</div></div>
+    <div class="kpi green animate-up stagger-2"><div class="kpi-icon green">&#x1F3AF;</div><div class="kpi-label">Total Leads</div><div class="kpi-val">${fn(leadR)}</div><div class="kpi-sub">${fd(leadS)} spent on leads</div></div>
+    <div class="kpi animate-up stagger-3"><div class="kpi-icon yellow">&#x1F4B2;</div><div class="kpi-label">Avg Cost / Lead</div><div class="kpi-val">${leadR>0?fd(leadS/leadR):'-'}</div><div class="kpi-sub">${leads.length} lead campaigns</div></div>
+    <div class="kpi purple animate-up stagger-4"><div class="kpi-icon purple">&#x1F4E3;</div><div class="kpi-label">Total Reach</div><div class="kpi-val">${fn(t.reach)}</div><div class="kpi-sub">${fn(t.impr)} impressions</div></div>
+    <div class="kpi animate-up stagger-5"><div class="kpi-icon blue">&#x1F517;</div><div class="kpi-label">Link Clicks</div><div class="kpi-val">${fn(t.clicks)}</div><div class="kpi-sub">CTR: ${t.impr>0?fp(t.clicks/t.impr*100):'-'}</div></div>
+    <div class="kpi animate-up stagger-6"><div class="kpi-icon red">&#x1F4CA;</div><div class="kpi-label">Avg CPM</div><div class="kpi-val">${t.impr>0?fd(t.spend/t.impr*1000):'-'}</div><div class="kpi-sub">Cost per 1,000 impr.</div></div>
+  `;
+
+  // Spend + results bar
+  if(charts.overview)charts.overview.destroy();
+  const names=campaigns.map(c=>c.campaign.length>35?c.campaign.slice(0,32)+'...':c.campaign);
+  charts.overview=new Chart($('chartOverview'),{type:'bar',data:{labels:names,datasets:[
+    {label:'Spend ($)',data:campaigns.map(c=>c.spend),backgroundColor:campaigns.map((_,i)=>COLORS[i%COLORS.length]+'CC'),borderRadius:6,yAxisID:'y'},
+    {label:'Results',data:campaigns.map(c=>c.results),type:'line',borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.08)',borderWidth:2.5,pointRadius:5,pointBackgroundColor:'#10b981',fill:true,tension:0.35,yAxisID:'y1'}
+  ]},options:{...CHART_OPTS,indexAxis:'y',scales:{
+    x:{...CHART_OPTS.scales.x,ticks:{...CHART_OPTS.scales.x.ticks,callback:v=>'$'+v.toLocaleString()}},
+    y:{...CHART_OPTS.scales.y,ticks:{color:'#5f6577',font:{family:'Inter',size:10}}},
+    y1:{position:'top',ticks:{color:'#10b981',font:{size:10}},grid:{drawOnChartArea:false},title:{display:true,text:'Results',color:'#10b981'}}
+  }}});
+
+  // Doughnut
+  if(charts.doughnut)charts.doughnut.destroy();
+  const rc=campaigns.filter(c=>c.results>0&&c.resultType.toLowerCase().includes('lead'));
+  charts.doughnut=new Chart($('chartDoughnut'),{type:'doughnut',data:{
+    labels:rc.map(c=>c.campaign.length>28?c.campaign.slice(0,25)+'...':c.campaign),
+    datasets:[{data:rc.map(c=>c.results),backgroundColor:rc.map((_,i)=>COLORS[i%COLORS.length]),borderWidth:0,hoverOffset:8}]
+  },options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{
+    legend:{position:'right',labels:{color:'#5f6577',font:{family:'Inter',size:11,weight:'500'},usePointStyle:true,pointStyle:'circle',padding:12}},
+    tooltip:{backgroundColor:'#fff',titleColor:'#1a1d2e',bodyColor:'#5f6577',borderColor:'#e5e7eb',borderWidth:1,padding:12,cornerRadius:10}
+  }}});
+
+  // Reach
+  if(charts.reach)charts.reach.destroy();
+  charts.reach=new Chart($('chartReach'),{type:'bar',data:{labels:names,datasets:[
+    {label:'Reach',data:campaigns.map(c=>c.reach),backgroundColor:'rgba(139,92,246,0.5)',borderRadius:6},
+    {label:'Impressions',data:campaigns.map(c=>c.impressions),backgroundColor:'rgba(67,97,238,0.35)',borderRadius:6}
+  ]},options:{...CHART_OPTS,indexAxis:'y'}});
+}
+
+// ===== CAMPAIGNS =====
+function renderCampaigns(){
+  if(!campaigns.length)return;
+  const leads=campaigns.filter(c=>c.resultType.toLowerCase().includes('lead'));
+  const aware=campaigns.filter(c=>c.resultType.toLowerCase().includes('reach'));
+  const lr=leads.reduce((s,c)=>s+c.results,0),ls=leads.reduce((s,c)=>s+c.spend,0);
+  const ar=aware.reduce((s,c)=>s+c.reach,0),as=aware.reduce((s,c)=>s+c.spend,0);
+  const bestCPR=leads.length?leads.reduce((b,c)=>c.cpr>0&&c.cpr<b.cpr?c:b,{cpr:Infinity}):null;
+  const bestCTR=campaigns.reduce((b,c)=>c.ctr>b.ctr?c:b);
+
+  $('campKpis').innerHTML=`
+    <div class="kpi accent animate-up stagger-1"><div class="kpi-icon blue">&#x1F4CB;</div><div class="kpi-label">Lead Campaigns</div><div class="kpi-val">${fn(lr)} leads</div><div class="kpi-sub">${fd(ls)} spent | ${lr>0?fd(ls/lr):'-'}/lead</div></div>
+    <div class="kpi purple animate-up stagger-2"><div class="kpi-icon purple">&#x1F4E2;</div><div class="kpi-label">Awareness Campaigns</div><div class="kpi-val">${fn(ar)} reach</div><div class="kpi-sub">${fd(as)} spent</div></div>
+    <div class="kpi green animate-up stagger-3"><div class="kpi-icon green">&#x2B50;</div><div class="kpi-label">Best Cost/Lead</div><div class="kpi-val">${bestCPR&&bestCPR.cpr<Infinity?fd(bestCPR.cpr):'-'}</div><div class="kpi-sub">${bestCPR&&bestCPR.campaign?bestCPR.campaign.slice(0,35):''}</div></div>
+    <div class="kpi animate-up stagger-4"><div class="kpi-icon yellow">&#x1F517;</div><div class="kpi-label">Highest CTR</div><div class="kpi-val">${fp(bestCTR.ctr)}</div><div class="kpi-sub">${bestCTR.campaign.slice(0,35)}</div></div>
+  `;
+
+  // Compute revenue attribution per campaign (proportional by spend within region)
+  const regSpend = {};
+  campaigns.forEach(c => { const r=classifyRegion(c); regSpend[r]=(regSpend[r]||0)+c.spend; });
+  const ausSalesRev = salesData.filter(s=>classifySaleRegion(s)==='AUS').reduce((t,s)=>t+s.amount,0);
+  const usaSalesRev = salesData.filter(s=>classifySaleRegion(s)==='USA').reduce((t,s)=>t+s.amount,0);
+  const campRevenue = campaigns.map(c => {
+    const reg = classifyRegion(c);
+    const rs = regSpend[reg]||1;
+    const regRev = reg==='AUS'?ausSalesRev:usaSalesRev;
+    const rev = (c.spend/rs)*regRev;
+    const profit = rev - c.spend;
+    const roas = c.spend>0?rev/c.spend:0;
+    return {rev, profit, roas, region:reg};
+  });
+
+  // Campaign cards
+  $('campaignGrid').innerHTML = campaigns.map((c,i) => {
+    const isLead = c.resultType.toLowerCase().includes('lead');
+    const isAware = c.resultType.toLowerCase().includes('reach');
+    const typeBadge = isLead?'<span class="badge badge-lead">Lead Gen</span>':isAware?'<span class="badge badge-awareness">Awareness</span>':'';
+    let qualBadge = '';
+    if(c.quality&&c.quality!=='-'){
+      const q=c.quality.toLowerCase();
+      const cls=q.includes('above')?'':q.includes('below')?'low':'avg';
+      qualBadge=`<span class="badge badge-quality ${cls}">${c.quality}</span>`;
+    }
+    const imgKey = 'campImg_'+i;
+    const savedImg = campImages[i] || '';
+    const cr = campRevenue[i];
+    const hasSales = salesData.length > 0;
+    return `<div class="camp-card animate-scale stagger-${Math.min(i+1,8)}">
+      <div class="camp-img-zone" data-idx="${i}" onclick="triggerImgUpload(${i})" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleImgDrop(event,${i})">
+        ${savedImg
+          ? `<img src="${savedImg}" alt="Ad creative"><button class="camp-img-remove" onclick="event.stopPropagation();removeImg(${i})" title="Remove image">&times;</button>`
+          : `<div class="camp-img-placeholder"><div class="icon">&#x1F5BC;</div><p>Drop ad creative here<br>or <strong>click to upload</strong></p></div>`
+        }
+      </div>
+      <input type="file" id="imgInput-${i}" accept="image/*" style="display:none" onchange="handleImgSelect(this.files[0],${i})">
+      <div class="camp-top">
+        <div class="camp-name">${c.campaign}</div>
+        <div class="camp-ads">${c.ads||'No ad details'}</div>
+        <div class="camp-badges">${typeBadge}${qualBadge}<span class="badge" style="background:${cr.region==='AUS'?'var(--blue-light);color:var(--blue)':'var(--purple-light);color:var(--purple)'}">${cr.region}</span></div>
+      </div>
+      <div class="camp-stats">
+        <div class="camp-stat"><div class="camp-stat-val">${fd(c.spend)}</div><div class="camp-stat-label">Spent</div></div>
+        <div class="camp-stat"><div class="camp-stat-val">${fn(c.results)}</div><div class="camp-stat-label">${isLead?'Leads':'Reach'}</div></div>
+        <div class="camp-stat"><div class="camp-stat-val">${c.cpr>1?fd(c.cpr):c.cpr>0?'$'+c.cpr.toFixed(4):'-'}</div><div class="camp-stat-label">Cost/Result</div></div>
+      </div>
+      ${hasSales?`<div class="camp-revenue">
+        <div class="camp-rev-stat"><div class="camp-rev-val">${fd(cr.rev)}</div><div class="camp-rev-label">Revenue</div></div>
+        <div class="camp-rev-stat"><div class="camp-rev-val ${cr.profit>=0?'green':'red'}">${cr.profit>=0?'+':''}${fd(cr.profit)}</div><div class="camp-rev-label">Profit</div></div>
+        <div class="camp-rev-stat"><div class="camp-rev-val">${cr.roas.toFixed(2)}x</div><div class="camp-rev-label">ROAS</div></div>
+      </div>`:''}
+      <div class="camp-bottom">
+        <div class="camp-mini"><div class="camp-mini-val">${fn(c.reach)}</div><div class="camp-mini-label">Reach</div></div>
+        <div class="camp-mini"><div class="camp-mini-val">${fn(c.impressions)}</div><div class="camp-mini-label">Impr.</div></div>
+        <div class="camp-mini"><div class="camp-mini-val">${c.ctr>0?fp(c.ctr):'-'}</div><div class="camp-mini-label">CTR</div></div>
+        <div class="camp-mini"><div class="camp-mini-val">${c.cpc>0?fd(c.cpc):'-'}</div><div class="camp-mini-label">CPC</div></div>
+      </div>
+    </div>`;
+  }).join('');
+  bindImgZones();
+
+  // P&L summary table (only if sales data exists)
+  if(salesData.length) {
+    let plHTML = '';
+    let tSpend=0,tRev=0,tProfit=0;
+    campaigns.forEach((c,i)=>{
+      const cr=campRevenue[i];
+      tSpend+=c.spend;tRev+=cr.rev;tProfit+=cr.profit;
+      plHTML+=`<tr>
+        <td style="font-weight:600">${c.campaign}</td>
+        <td><span class="badge" style="background:${cr.region==='AUS'?'var(--blue-light);color:var(--blue)':'var(--purple-light);color:var(--purple)'}">${cr.region}</span></td>
+        <td class="r">${fd(c.spend)}</td>
+        <td class="r">${fd(cr.rev)}</td>
+        <td class="r" style="color:${cr.profit>=0?'var(--green)':'var(--red)'}; font-weight:700">${cr.profit>=0?'+':''}${fd(cr.profit)}</td>
+        <td class="r" style="color:${cr.profit>=0?'var(--green)':'var(--red)'}">${c.spend>0?(cr.profit>=0?'+':'')+fp(cr.profit/c.spend*100):'-'}</td>
+        <td class="r">${cr.roas>0?cr.roas.toFixed(2)+'x':'-'}</td>
+      </tr>`;
+    });
+    plHTML+=`<tr class="total-row"><td colspan="2"><strong>TOTAL</strong></td><td class="r">${fd(tSpend)}</td><td class="r">${fd(tRev)}</td><td class="r" style="color:${tProfit>=0?'var(--green)':'var(--red)'}; font-weight:700">${tProfit>=0?'+':''}${fd(tProfit)}</td><td class="r">${tSpend>0?(tProfit>=0?'+':'')+fp(tProfit/tSpend*100):'-'}</td><td class="r">${tSpend>0?(tRev/tSpend).toFixed(2)+'x':'-'}</td></tr>`;
+    $('campPLTable').innerHTML=`<div class="tbl-card" style="margin-top:24px;">
+      <div class="tbl-header"><h3>&#x1F4CA; Campaign P&L Breakdown</h3><span class="tbl-meta">${campaigns.length} campaigns | Revenue: ${fd(tRev)} | Profit: ${fd(tProfit)}</span></div>
+      <div class="tbl-scroll"><table><thead><tr><th>Campaign</th><th>Region</th><th class="r">Ad Spend</th><th class="r">Revenue</th><th class="r">Profit</th><th class="r">ROI</th><th class="r">ROAS</th></tr></thead><tbody>${plHTML}</tbody></table></div>
+    </div>`;
+  } else {
+    $('campPLTable').innerHTML='';
+  }
+
+  // CPR chart
+  if(charts.cpr)charts.cpr.destroy();
+  const wr=campaigns.filter(c=>c.cpr>1);
+  charts.cpr=new Chart($('chartCPR'),{type:'bar',data:{
+    labels:wr.map(c=>c.campaign.length>30?c.campaign.slice(0,27)+'...':c.campaign),
+    datasets:[{label:'Cost per Result',data:wr.map(c=>c.cpr),backgroundColor:wr.map(c=>c.cpr<18?'rgba(16,185,129,0.7)':c.cpr<28?'rgba(245,158,11,0.7)':'rgba(239,68,68,0.7)'),borderRadius:6}]
+  },options:{...CHART_OPTS,indexAxis:'y',plugins:{...CHART_OPTS.plugins,legend:{display:false}},scales:{
+    x:{...CHART_OPTS.scales.x,ticks:{...CHART_OPTS.scales.x.ticks,callback:v=>'$'+v}},y:{...CHART_OPTS.scales.y,ticks:{color:'#5f6577',font:{family:'Inter',size:10}}}
+  }}});
+
+  // Bubble
+  if(charts.bubble)charts.bubble.destroy();
+  charts.bubble=new Chart($('chartBubble'),{type:'bubble',data:{
+    datasets:campaigns.filter(c=>c.ctr>0.01).map((c,i)=>({
+      label:c.campaign.length>22?c.campaign.slice(0,19)+'...':c.campaign,
+      data:[{x:c.ctr,y:c.cpc,r:Math.max(6,Math.sqrt(c.spend)*0.7)}],
+      backgroundColor:COLORS[i%COLORS.length]+'88',borderColor:COLORS[i%COLORS.length],borderWidth:1.5
+    }))
+  },options:{...CHART_OPTS,scales:{
+    x:{...CHART_OPTS.scales.x,title:{display:true,text:'CTR (%)',color:'#5f6577',font:{weight:'600'}}},
+    y:{...CHART_OPTS.scales.y,title:{display:true,text:'CPC ($)',color:'#5f6577',font:{weight:'600'}},ticks:{...CHART_OPTS.scales.y.ticks,callback:v=>'$'+v}}
+  }}});
+}
+
+// ===== PROFIT =====
+function renderProfit(){
+  const ts=campaigns.reduce((s,c)=>s+c.spend,0);
+  const tr=salesData.reduce((s,r)=>s+r.amount,0);
+  const profit=tr-ts, roi=ts>0?profit/ts*100:0, margin=tr>0?profit/tr*100:0;
+  const aov=salesData.length>0?tr/salesData.length:0;
+  const cps=salesData.length>0?ts/salesData.length:0;
+  const leads=campaigns.filter(c=>c.resultType.toLowerCase().includes('lead'));
+  const tl=leads.reduce((s,c)=>s+c.results,0);
+
+  $('profitKpis').innerHTML=`
+    <div class="kpi accent animate-up stagger-1"><div class="kpi-icon blue">&#x1F4B5;</div><div class="kpi-label">Ad Spend</div><div class="kpi-val">${fd(ts)}</div><div class="kpi-sub">${campaigns.length} campaigns</div></div>
+    <div class="kpi green animate-up stagger-2"><div class="kpi-icon green">&#x1F6D2;</div><div class="kpi-label">Sales Revenue</div><div class="kpi-val">${fd(tr)}</div><div class="kpi-sub">${salesData.length} orders</div></div>
+    <div class="kpi ${profit>=0?'green':'red'} animate-up stagger-3"><div class="kpi-icon ${profit>=0?'green':'red'}">&#x1F4B0;</div><div class="kpi-label">Gross Profit</div><div class="kpi-val ${profit>=0?'green':'red'}">${profit>=0?'+':''}${fd(profit)}</div><div class="kpi-sub">Margin: ${fp(margin)}</div></div>
+    <div class="kpi ${roi>=0?'green':'red'} animate-up stagger-4"><div class="kpi-icon ${roi>=0?'green':'red'}">&#x1F4C8;</div><div class="kpi-label">Ad ROI</div><div class="kpi-val ${roi>=0?'green':'red'}">${roi>=0?'+':''}${fp(roi)}</div><div class="kpi-sub">Return on ad investment</div></div>
+    <div class="kpi animate-up stagger-5"><div class="kpi-icon yellow">&#x1F6D2;</div><div class="kpi-label">Avg Order Value</div><div class="kpi-val">${fd(aov)}</div><div class="kpi-sub">${salesData.length} orders</div></div>
+    <div class="kpi animate-up stagger-6"><div class="kpi-icon red">&#x1F3F7;</div><div class="kpi-label">Cost per Sale</div><div class="kpi-val">${fd(cps)}</div><div class="kpi-sub">Ad spend / orders</div></div>
+    <div class="kpi purple animate-up stagger-7"><div class="kpi-icon purple">&#x1F504;</div><div class="kpi-label">Lead to Sale</div><div class="kpi-val">${tl>0?fp(salesData.length/tl*100):'N/A'}</div><div class="kpi-sub">${salesData.length} sales from ${fn(tl)} leads</div></div>
+    <div class="kpi animate-up stagger-8"><div class="kpi-icon blue">&#x1F4B2;</div><div class="kpi-label">Revenue / Lead</div><div class="kpi-val">${tl>0?fd(tr/tl):'N/A'}</div><div class="kpi-sub">Total sales / total leads</div></div>
+  `;
+
+  // Chart
+  if(charts.profit)charts.profit.destroy();
+  charts.profit=new Chart($('chartProfit'),{type:'bar',data:{
+    labels:['Total Ad Spend','Total Sales Revenue','Gross Profit'],
+    datasets:[{data:[ts,tr,profit],backgroundColor:['rgba(239,68,68,0.65)','rgba(16,185,129,0.65)',profit>=0?'rgba(67,97,238,0.65)':'rgba(239,68,68,0.45)'],borderColor:['#ef4444','#10b981',profit>=0?'#4361ee':'#ef4444'],borderWidth:2,borderRadius:8,barThickness:90}]
+  },options:{...CHART_OPTS,plugins:{...CHART_OPTS.plugins,legend:{display:false},tooltip:{...CHART_OPTS.plugins.tooltip,callbacks:{label:ctx=>fd(ctx.parsed.y)}}},scales:{
+    x:{...CHART_OPTS.scales.x,ticks:{color:'#1a1d2e',font:{family:'Inter',size:13,weight:'600'}}},
+    y:{...CHART_OPTS.scales.y,ticks:{...CHART_OPTS.scales.y.ticks,callback:v=>'$'+v.toLocaleString()}}
+  }}});
+
+  // Sales table
+  let stot=0;
+  let shtml=salesData.map((s,i)=>{stot+=s.amount;return`<tr><td>${i+1}</td><td style="font-weight:600">${s.customer}</td><td style="font-size:11px;color:var(--text-muted)">${s.ad_id}</td><td>${s.invoice}</td><td>${s.date}</td><td class="r" style="font-weight:700">${fd(s.amount)}</td></tr>`;}).join('');
+  shtml+=`<tr class="total-row"><td></td><td colspan="4">TOTAL</td><td class="r" style="color:var(--green)">${fd(stot)}</td></tr>`;
+  $('salesTBody').innerHTML=shtml;
+  $('salesMeta').textContent=salesData.length+' orders | '+fd(stot);
+}
+
+// ===== AUS VS USA =====
+function classifyRegion(c) {
+  const n = c.campaign.toLowerCase();
+  if(n.includes('usa')||n.includes('pnw')||n.includes('ak ')) return 'USA';
+  return 'AUS';
+}
+function classifySaleRegion(s) {
+  const src = (s.ad_id||'').toLowerCase();
+  const cust = (s.customer||'').toLowerCase();
+  if(cust.includes('sales - usa')||cust.includes('sales - us')) return 'USA';
+  if(cust.includes('sales - au')) return 'AUS';
+  if(src.includes('fb ads')&&cust.includes('usa')) return 'USA';
+  return 'AUS';
+}
+
+function renderGeo() {
+  if(!campaigns.length) return;
+
+  const aus = campaigns.filter(c=>classifyRegion(c)==='AUS');
+  const usa = campaigns.filter(c=>classifyRegion(c)==='USA');
+
+  const ausSpend = aus.reduce((s,c)=>s+c.spend,0);
+  const usaSpend = usa.reduce((s,c)=>s+c.spend,0);
+  const ausLeads = aus.filter(c=>c.resultType.toLowerCase().includes('lead')).reduce((s,c)=>s+c.results,0);
+  const usaLeads = usa.filter(c=>c.resultType.toLowerCase().includes('lead')).reduce((s,c)=>s+c.results,0);
+  const ausReach = aus.reduce((s,c)=>s+c.reach,0);
+  const usaReach = usa.reduce((s,c)=>s+c.reach,0);
+
+  const ausSales = salesData.filter(s=>classifySaleRegion(s)==='AUS');
+  const usaSales = salesData.filter(s=>classifySaleRegion(s)==='USA');
+  const ausRev = ausSales.reduce((s,r)=>s+r.amount,0);
+  const usaRev = usaSales.reduce((s,r)=>s+r.amount,0);
+  const ausProfit = ausRev - ausSpend;
+  const usaProfit = usaRev - usaSpend;
+  const ausROI = ausSpend>0?ausProfit/ausSpend*100:0;
+  const usaROI = usaSpend>0?usaProfit/usaSpend*100:0;
+  const ausCPL = ausLeads>0?ausSpend/ausLeads:0;  // Only lead spend for CPL
+  const ausLeadSpend = aus.filter(c=>c.resultType.toLowerCase().includes('lead')).reduce((s,c)=>s+c.spend,0);
+  const usaLeadSpend = usa.filter(c=>c.resultType.toLowerCase().includes('lead')).reduce((s,c)=>s+c.spend,0);
+  const ausAvgCPL = ausLeads>0?ausLeadSpend/ausLeads:0;
+  const usaAvgCPL = usaLeads>0?usaLeadSpend/usaLeads:0;
+
+  $('geoKpis').innerHTML = `
+    <div class="kpi accent animate-up stagger-1"><div class="kpi-icon blue">&#x1F1E6;&#x1F1FA;</div><div class="kpi-label">AUS Ad Spend</div><div class="kpi-val">${fd(ausSpend)}</div><div class="kpi-sub">${aus.length} campaigns</div></div>
+    <div class="kpi purple animate-up stagger-2"><div class="kpi-icon purple">&#x1F1FA;&#x1F1F8;</div><div class="kpi-label">USA Ad Spend</div><div class="kpi-val">${fd(usaSpend)}</div><div class="kpi-sub">${usa.length} campaigns</div></div>
+    <div class="kpi green animate-up stagger-3"><div class="kpi-icon green">&#x1F1E6;&#x1F1FA;</div><div class="kpi-label">AUS Revenue</div><div class="kpi-val">${fd(ausRev)}</div><div class="kpi-sub">${ausSales.length} orders | Profit: ${fd(ausProfit)}</div></div>
+    <div class="kpi green animate-up stagger-4"><div class="kpi-icon green">&#x1F1FA;&#x1F1F8;</div><div class="kpi-label">USA Revenue</div><div class="kpi-val">${fd(usaRev)}</div><div class="kpi-sub">${usaSales.length} orders | Profit: ${fd(usaProfit)}</div></div>
+    <div class="kpi ${ausROI>=0?'green':'red'} animate-up stagger-5"><div class="kpi-icon ${ausROI>=0?'green':'red'}">&#x1F4C8;</div><div class="kpi-label">AUS ROI</div><div class="kpi-val ${ausROI>=0?'green':'red'}">${ausROI>=0?'+':''}${fp(ausROI)}</div><div class="kpi-sub">CPL: ${fd(ausAvgCPL)} | ${fn(ausLeads)} leads</div></div>
+    <div class="kpi ${usaROI>=0?'green':'red'} animate-up stagger-6"><div class="kpi-icon ${usaROI>=0?'green':'red'}">&#x1F4C8;</div><div class="kpi-label">USA ROI</div><div class="kpi-val ${usaROI>=0?'green':'red'}">${usaROI>=0?'+':''}${fp(usaROI)}</div><div class="kpi-sub">CPL: ${fd(usaAvgCPL)} | ${fn(usaLeads)} leads</div></div>
+  `;
+
+  // Charts
+  if(charts.geoSpend) charts.geoSpend.destroy();
+  charts.geoSpend = new Chart($('chartGeoSpend'),{type:'doughnut',data:{
+    labels:['AUS','USA'],
+    datasets:[{data:[ausSpend,usaSpend],backgroundColor:['rgba(67,97,238,0.7)','rgba(139,92,246,0.7)'],borderWidth:0,hoverOffset:8}]
+  },options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{color:'#5f6577',font:{family:'Inter',size:12}}}}}});
+
+  if(charts.geoRev) charts.geoRev.destroy();
+  charts.geoRev = new Chart($('chartGeoRev'),{type:'doughnut',data:{
+    labels:['AUS','USA'],
+    datasets:[{data:[ausRev,usaRev],backgroundColor:['rgba(16,185,129,0.7)','rgba(245,158,11,0.7)'],borderWidth:0,hoverOffset:8}]
+  },options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{color:'#5f6577',font:{family:'Inter',size:12}}}}}});
+
+  if(charts.geoLeads) charts.geoLeads.destroy();
+  charts.geoLeads = new Chart($('chartGeoLeads'),{type:'bar',data:{
+    labels:['Leads','Reach'],
+    datasets:[
+      {label:'AUS',data:[ausLeads,ausReach],backgroundColor:'rgba(67,97,238,0.6)',borderRadius:6},
+      {label:'USA',data:[usaLeads,usaReach],backgroundColor:'rgba(139,92,246,0.6)',borderRadius:6}
+    ]
+  },options:{...CHART_OPTS,plugins:{...CHART_OPTS.plugins,legend:{labels:{color:'#5f6577',font:{family:'Inter',size:12}}}}}});
+
+  if(charts.geoROI) charts.geoROI.destroy();
+  charts.geoROI = new Chart($('chartGeoROI'),{type:'bar',data:{
+    labels:['Ad Spend','Revenue','Profit','ROI %'],
+    datasets:[
+      {label:'AUS',data:[ausSpend,ausRev,ausProfit,ausROI],backgroundColor:'rgba(67,97,238,0.6)',borderRadius:6},
+      {label:'USA',data:[usaSpend,usaRev,usaProfit,usaROI],backgroundColor:'rgba(139,92,246,0.6)',borderRadius:6}
+    ]
+  },options:{...CHART_OPTS,plugins:{...CHART_OPTS.plugins,legend:{labels:{color:'#5f6577',font:{family:'Inter',size:12}}}},scales:{
+    x:{...CHART_OPTS.scales.x},y:{...CHART_OPTS.scales.y,ticks:{...CHART_OPTS.scales.y.ticks,callback:v=>'$'+v.toLocaleString()}}
+  }}});
+
+  // Summary table
+  $('geoTables').innerHTML = `
+    <div class="tbl-card">
+      <div class="tbl-header"><h3>&#x1F30F; Regional Campaign Breakdown</h3></div>
+      <div class="tbl-scroll"><table><thead><tr><th>Campaign</th><th>Region</th><th class="r">Spend</th><th class="r">Results</th><th class="r">Cost/Result</th><th class="r">Reach</th><th class="r">CTR</th></tr></thead><tbody>
+        ${campaigns.map(c=>{const reg=classifyRegion(c);return `<tr><td style="font-weight:600">${c.campaign}</td><td><span class="badge" style="background:${reg==='AUS'?'var(--blue-light);color:var(--blue)':'var(--purple-light);color:var(--purple)'}">${reg}</span></td><td class="r">${fd(c.spend)}</td><td class="r">${fn(c.results)}</td><td class="r">${c.cpr>1?fd(c.cpr):c.cpr>0?'$'+c.cpr.toFixed(4):'-'}</td><td class="r">${fn(c.reach)}</td><td class="r">${c.ctr>0?fp(c.ctr):'-'}</td></tr>`;}).join('')}
+      </tbody></table></div>
+    </div>`;
+}
+
+// ===== REVENUE PER AD =====
+function renderPerAd() {
+  if(!campaigns.length) return;
+
+  // Match sales to campaigns by region and type
+  // Simple attribution: divide regional revenue proportionally by campaign spend
+  const regions = {};
+  campaigns.forEach(c => {
+    const reg = classifyRegion(c);
+    if(!regions[reg]) regions[reg] = {spend:0, campaigns:[]};
+    regions[reg].spend += c.spend;
+    regions[reg].campaigns.push(c);
+  });
+
+  const ausSales = salesData.filter(s=>classifySaleRegion(s)==='AUS');
+  const usaSales = salesData.filter(s=>classifySaleRegion(s)==='USA');
+  const ausRev = ausSales.reduce((s,r)=>s+r.amount,0);
+  const usaRev = usaSales.reduce((s,r)=>s+r.amount,0);
+
+  // Attribute revenue proportionally by spend within each region
+  const campPL = campaigns.map(c => {
+    const reg = classifyRegion(c);
+    const regSpend = regions[reg].spend;
+    const regRev = reg==='AUS'?ausRev:usaRev;
+    const rev = regSpend>0 ? (c.spend/regSpend)*regRev : 0;
+    const profit = rev - c.spend;
+    const roi = c.spend>0?profit/c.spend*100:0;
+    const roas = c.spend>0?rev/c.spend:0;
+    const isLead = c.resultType.toLowerCase().includes('lead');
+    const cpl = isLead&&c.results>0?c.spend/c.results:0;
+    const revPerLead = isLead&&c.results>0?rev/c.results:0;
+    return {...c, region:reg, revenue:rev, profit, roi, roas, cpl, revPerLead};
+  });
+
+  // KPIs
+  const bestROAS = campPL.filter(c=>c.roas>0).sort((a,b)=>b.roas-a.roas)[0];
+  const worstROAS = campPL.filter(c=>c.spend>100).sort((a,b)=>a.roas-b.roas)[0];
+  const totalRev = campPL.reduce((s,c)=>s+c.revenue,0);
+  const totalSpend = campPL.reduce((s,c)=>s+c.spend,0);
+  const totalProfit = totalRev - totalSpend;
+
+  $('peradKpis').innerHTML = `
+    <div class="kpi green animate-up stagger-1"><div class="kpi-icon green">&#x1F4B0;</div><div class="kpi-label">Total Revenue</div><div class="kpi-val">${fd(totalRev)}</div><div class="kpi-sub">Across ${campaigns.length} campaigns</div></div>
+    <div class="kpi ${totalProfit>=0?'green':'red'} animate-up stagger-2"><div class="kpi-icon ${totalProfit>=0?'green':'red'}">&#x1F4C8;</div><div class="kpi-label">Total Profit</div><div class="kpi-val ${totalProfit>=0?'green':'red'}">${totalProfit>=0?'+':''}${fd(totalProfit)}</div><div class="kpi-sub">ROAS: ${totalSpend>0?(totalRev/totalSpend).toFixed(2)+'x':'N/A'}</div></div>
+    <div class="kpi accent animate-up stagger-3"><div class="kpi-icon blue">&#x1F31F;</div><div class="kpi-label">Best ROAS</div><div class="kpi-val">${bestROAS?bestROAS.roas.toFixed(2)+'x':'N/A'}</div><div class="kpi-sub">${bestROAS?bestROAS.campaign.slice(0,35):''}</div></div>
+    <div class="kpi red animate-up stagger-4"><div class="kpi-icon red">&#x26A0;</div><div class="kpi-label">Lowest ROAS</div><div class="kpi-val">${worstROAS?worstROAS.roas.toFixed(2)+'x':'N/A'}</div><div class="kpi-sub">${worstROAS?worstROAS.campaign.slice(0,35):''}</div></div>
+  `;
+
+  // Chart
+  if(charts.perAd) charts.perAd.destroy();
+  const sorted = [...campPL].sort((a,b)=>b.revenue-a.revenue);
+  charts.perAd = new Chart($('chartPerAd'),{type:'bar',data:{
+    labels:sorted.map(c=>c.campaign.length>35?c.campaign.slice(0,32)+'...':c.campaign),
+    datasets:[
+      {label:'Revenue',data:sorted.map(c=>c.revenue),backgroundColor:'rgba(16,185,129,0.6)',borderRadius:6},
+      {label:'Ad Spend',data:sorted.map(c=>c.spend),backgroundColor:'rgba(239,68,68,0.5)',borderRadius:6},
+      {label:'Profit',data:sorted.map(c=>c.profit),type:'line',borderColor:'#4361ee',backgroundColor:'rgba(67,97,238,0.08)',borderWidth:2.5,pointRadius:5,pointBackgroundColor:sorted.map(c=>c.profit>=0?'#10b981':'#ef4444'),fill:true,tension:0.35}
+    ]
+  },options:{...CHART_OPTS,indexAxis:'y',scales:{
+    x:{...CHART_OPTS.scales.x,ticks:{...CHART_OPTS.scales.x.ticks,callback:v=>'$'+v.toLocaleString()}},
+    y:{...CHART_OPTS.scales.y,ticks:{color:'#5f6577',font:{family:'Inter',size:10}}}
+  }}});
+
+  // Table
+  let html = '';
+  let tSpend=0,tRev=0,tProfit=0;
+  sorted.forEach(c => {
+    tSpend+=c.spend;tRev+=c.revenue;tProfit+=c.profit;
+    html += `<tr>
+      <td style="font-weight:600">${c.campaign}</td>
+      <td><span class="badge" style="background:${c.region==='AUS'?'var(--blue-light);color:var(--blue)':'var(--purple-light);color:var(--purple)'}">${c.region}</span></td>
+      <td class="r">${fd(c.spend)}</td>
+      <td class="r">${fd(c.revenue)}</td>
+      <td class="r" style="color:${c.profit>=0?'var(--green)':'var(--red)'}; font-weight:700">${c.profit>=0?'+':''}${fd(c.profit)}</td>
+      <td class="r" style="color:${c.roi>=0?'var(--green)':'var(--red)'}">${c.roi>=0?'+':''}${fp(c.roi)}</td>
+      <td class="r">${c.roas>0?c.roas.toFixed(2)+'x':'-'}</td>
+      <td class="r">${c.cpl>0?fd(c.cpl):'-'}</td>
+      <td class="r">${c.revPerLead>0?fd(c.revPerLead):'-'}</td>
+    </tr>`;
+  });
+  html += `<tr class="total-row"><td colspan="2"><strong>TOTAL</strong></td><td class="r">${fd(tSpend)}</td><td class="r">${fd(tRev)}</td><td class="r" style="color:${tProfit>=0?'var(--green)':'var(--red)'}">${tProfit>=0?'+':''}${fd(tProfit)}</td><td class="r">${tSpend>0?(tProfit>=0?'+':'')+fp(tProfit/tSpend*100):'-'}</td><td class="r">${tSpend>0?(tRev/tSpend).toFixed(2)+'x':'-'}</td><td></td><td></td></tr>`;
+  $('peradTBody').innerHTML = html;
+  $('peradMeta').textContent = campaigns.length + ' campaigns | Revenue: ' + fd(tRev) + ' | Profit: ' + fd(tProfit);
+}
+
+// ===== MONTHLY COMPARISON =====
+// Stores historical months: { 'YYYY-MM': { campaigns:[], salesData:[] } }
+let monthlyHistory = {};
+
+function getMonthKey(campaigns) {
+  if(!campaigns.length) return '';
+  const s = campaigns[0].starts;
+  if(!s) return '';
+  // Parse date like "2026-03-01"
+  const parts = s.split('-');
+  if(parts.length>=2) return parts[0]+'-'+parts[1];
+  return '';
+}
+
+function saveMonthlyHistory() {
+  try { localStorage.setItem('savwinch_monthly', JSON.stringify(monthlyHistory)); } catch(e) {}
+}
+function loadMonthlyHistory() {
+  try {
+    const d = localStorage.getItem('savwinch_monthly');
+    if(d) monthlyHistory = JSON.parse(d);
+  } catch(e) { monthlyHistory = {}; }
+}
+
+function storeCurrentMonth() {
+  if(!campaigns.length) return;
+  const key = getMonthKey(campaigns);
+  if(!key) return;
+  monthlyHistory[key] = {
+    campaigns: campaigns.map(c=>({...c})),
+    salesData: salesData.map(s=>({...s}))
+  };
+  saveMonthlyHistory();
+}
+
+function renderMonthly() {
+  loadMonthlyHistory();
+  // Store current data as a month entry
+  storeCurrentMonth();
+
+  const months = Object.keys(monthlyHistory).sort();
+
+  if(months.length < 2) {
+    $('monthlyKpis').innerHTML = '';
+    $('monthlyTable').innerHTML = `
+      <div class="insight-card neutral" style="text-align:center;padding:40px;">
+        <div class="insight-icon" style="font-size:48px;">&#x1F4C5;</div>
+        <div class="insight-title" style="font-size:16px;margin:12px 0;">Monthly Comparison</div>
+        <div class="insight-body">You have data for <strong>${months.length} month${months.length===1?'':'s'}</strong>. Upload a second month's data to see comparisons.<br><br>
+        Currently stored: <strong>${months.map(m=>{const [y,mo]=m.split('-');return new Date(y,mo-1).toLocaleDateString('en-AU',{month:'long',year:'numeric'});}).join(', ')||'None'}</strong></div>
+      </div>`;
+    // Destroy charts if they exist
+    ['monthly','monthlySpend','monthlyLeads'].forEach(k=>{if(charts[k]){charts[k].destroy();charts[k]=null;}});
+    return;
+  }
+
+  // Build month summaries
+  const summaries = months.map(key => {
+    const d = monthlyHistory[key];
+    const c = d.campaigns;
+    const s = d.salesData;
+    const spend = c.reduce((t,x)=>t+x.spend,0);
+    const leads = c.filter(x=>x.resultType.toLowerCase().includes('lead')).reduce((t,x)=>t+x.results,0);
+    const reach = c.reduce((t,x)=>t+x.reach,0);
+    const clicks = c.reduce((t,x)=>t+x.linkClicks,0);
+    const impr = c.reduce((t,x)=>t+x.impressions,0);
+    const rev = s.reduce((t,x)=>t+x.amount,0);
+    const profit = rev - spend;
+    const roi = spend>0?profit/spend*100:0;
+    const cpl = leads>0?spend/leads:0;  // Approximate
+    const leadSpend = c.filter(x=>x.resultType.toLowerCase().includes('lead')).reduce((t,x)=>t+x.spend,0);
+    const avgCPL = leads>0?leadSpend/leads:0;
+    const roas = spend>0?rev/spend:0;
+    const [yr,mo] = key.split('-');
+    const label = new Date(yr,mo-1).toLocaleDateString('en-AU',{month:'short',year:'numeric'});
+    return {key,label,spend,leads,reach,clicks,impr,rev,profit,roi,avgCPL,roas,orders:s.length,campaigns:c.length};
+  });
+
+  const curr = summaries[summaries.length-1];
+  const prev = summaries[summaries.length-2];
+  const spendChg = prev.spend>0?(curr.spend-prev.spend)/prev.spend*100:0;
+  const leadsChg = prev.leads>0?(curr.leads-prev.leads)/prev.leads*100:0;
+  const revChg = prev.rev>0?(curr.rev-prev.rev)/prev.rev*100:0;
+  const profitChg = prev.profit!==0?(curr.profit-prev.profit)/Math.abs(prev.profit)*100:0;
+
+  function chgBadge(v) { return `<span style="color:${v>=0?'var(--green)':'var(--red)'}; font-weight:700">${v>=0?'+':''}${v.toFixed(1)}%</span>`; }
+
+  $('monthlyKpis').innerHTML = `
+    <div class="kpi animate-up stagger-1"><div class="kpi-icon blue">&#x1F4B5;</div><div class="kpi-label">Spend Change</div><div class="kpi-val">${chgBadge(spendChg)}</div><div class="kpi-sub">${fd(prev.spend)} > ${fd(curr.spend)}</div></div>
+    <div class="kpi animate-up stagger-2"><div class="kpi-icon green">&#x1F3AF;</div><div class="kpi-label">Leads Change</div><div class="kpi-val">${chgBadge(leadsChg)}</div><div class="kpi-sub">${fn(prev.leads)} > ${fn(curr.leads)}</div></div>
+    <div class="kpi animate-up stagger-3"><div class="kpi-icon purple">&#x1F4B0;</div><div class="kpi-label">Revenue Change</div><div class="kpi-val">${chgBadge(revChg)}</div><div class="kpi-sub">${fd(prev.rev)} > ${fd(curr.rev)}</div></div>
+    <div class="kpi animate-up stagger-4"><div class="kpi-icon ${curr.profit>=prev.profit?'green':'red'}">&#x1F4C8;</div><div class="kpi-label">Profit Change</div><div class="kpi-val">${chgBadge(profitChg)}</div><div class="kpi-sub">${fd(prev.profit)} > ${fd(curr.profit)}</div></div>
+  `;
+
+  const labels = summaries.map(s=>s.label);
+
+  if(charts.monthly) charts.monthly.destroy();
+  charts.monthly = new Chart($('chartMonthly'),{type:'bar',data:{
+    labels,
+    datasets:[
+      {label:'Ad Spend',data:summaries.map(s=>s.spend),backgroundColor:'rgba(239,68,68,0.5)',borderRadius:6},
+      {label:'Revenue',data:summaries.map(s=>s.rev),backgroundColor:'rgba(16,185,129,0.5)',borderRadius:6},
+      {label:'Profit',data:summaries.map(s=>s.profit),type:'line',borderColor:'#4361ee',borderWidth:2.5,pointRadius:6,pointBackgroundColor:summaries.map(s=>s.profit>=0?'#10b981':'#ef4444'),fill:false,tension:0.3}
+    ]
+  },options:{...CHART_OPTS,scales:{
+    x:{...CHART_OPTS.scales.x},y:{...CHART_OPTS.scales.y,ticks:{...CHART_OPTS.scales.y.ticks,callback:v=>'$'+v.toLocaleString()}}
+  }}});
+
+  if(charts.monthlySpend) charts.monthlySpend.destroy();
+  charts.monthlySpend = new Chart($('chartMonthlySpend'),{type:'line',data:{
+    labels,datasets:[{label:'Ad Spend',data:summaries.map(s=>s.spend),borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.08)',borderWidth:2.5,pointRadius:5,fill:true,tension:0.3}]
+  },options:{...CHART_OPTS,plugins:{...CHART_OPTS.plugins,legend:{display:false}},scales:{
+    x:{...CHART_OPTS.scales.x},y:{...CHART_OPTS.scales.y,ticks:{...CHART_OPTS.scales.y.ticks,callback:v=>'$'+v.toLocaleString()}}
+  }}});
+
+  if(charts.monthlyLeads) charts.monthlyLeads.destroy();
+  charts.monthlyLeads = new Chart($('chartMonthlyLeads'),{type:'line',data:{
+    labels,datasets:[{label:'Leads',data:summaries.map(s=>s.leads),borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.08)',borderWidth:2.5,pointRadius:5,fill:true,tension:0.3}]
+  },options:{...CHART_OPTS,plugins:{...CHART_OPTS.plugins,legend:{display:false}}}});
+
+  // Monthly table
+  $('monthlyTable').innerHTML = `
+    <div class="tbl-card">
+      <div class="tbl-header"><h3>&#x1F4C5; Month-by-Month Summary</h3><span class="tbl-meta">${months.length} months tracked</span></div>
+      <div class="tbl-scroll"><table><thead><tr><th>Month</th><th class="r">Campaigns</th><th class="r">Ad Spend</th><th class="r">Leads</th><th class="r">Avg CPL</th><th class="r">Revenue</th><th class="r">Profit</th><th class="r">ROI</th><th class="r">ROAS</th><th class="r">Orders</th></tr></thead><tbody>
+        ${summaries.map(s=>`<tr>
+          <td style="font-weight:700">${s.label}</td>
+          <td class="r">${s.campaigns}</td>
+          <td class="r">${fd(s.spend)}</td>
+          <td class="r">${fn(s.leads)}</td>
+          <td class="r">${fd(s.avgCPL)}</td>
+          <td class="r">${fd(s.rev)}</td>
+          <td class="r" style="color:${s.profit>=0?'var(--green)':'var(--red)'}; font-weight:700">${s.profit>=0?'+':''}${fd(s.profit)}</td>
+          <td class="r">${s.roi>=0?'+':''}${fp(s.roi)}</td>
+          <td class="r">${s.roas.toFixed(2)}x</td>
+          <td class="r">${s.orders}</td>
+        </tr>`).join('')}
+      </tbody></table></div>
+    </div>`;
+}
+
+// ===== BENCHMARKS =====
+function renderBenchmarks() {
+  if(!campaigns.length) return;
+
+  // Industry benchmarks for Marine/Outdoor Equipment on Meta Ads
+  const BENCH = {
+    cpl: { low:15, mid:25, high:40, unit:'$', label:'Cost per Lead', note:'Marine/outdoor equipment typically $20 to $40 per lead. Under $20 is strong, over $40 needs attention.' },
+    ctr: { low:0.7, mid:1.0, high:1.5, unit:'%', label:'Click-Through Rate (Lead Gen)', note:'Meta average across all industries is 0.9% to 1.5%. Above 1.2% is strong for equipment/B2B.' },
+    cpc: { low:1.0, mid:1.75, high:3.0, unit:'$', label:'Cost per Click', note:'Industry average $1.50 to $3.00. Lower is better as it means more traffic for the same budget.' },
+    cpm: { low:8, mid:14, high:22, unit:'$', label:'CPM (Lead Gen)', note:'Cost per 1,000 impressions for lead campaigns. $10 to $20 is typical for lead gen audiences.' },
+    cpmAware: { low:1.0, mid:2.5, high:5.0, unit:'$', label:'CPM (Awareness)', note:'Awareness campaigns typically $2 to $8 CPM. Under $2 is exceptional reach efficiency.' },
+    roas: { low:2.0, mid:3.5, high:5.0, unit:'x', label:'Return on Ad Spend', note:'E-commerce average is 2x to 4x. Above 4x is strong. Below 2x means you are losing money or breaking even.' },
+    convRate: { low:1.5, mid:3.0, high:5.0, unit:'%', label:'Lead to Sale Conversion', note:'For high-ticket items ($1,000+), 2% to 5% is normal. Below 2% suggests follow-up process issues.' },
+    qualScore: { low:35, mid:55, high:75, unit:'%', label:'Quality Ranking', note:'Percentage of campaigns rated "Above average" by Meta. Higher means better creative relevance and lower costs.' }
+  };
+
+  // Compute your actual metrics
+  const leads = campaigns.filter(c=>c.resultType.toLowerCase().includes('lead'));
+  const aware = campaigns.filter(c=>c.resultType.toLowerCase().includes('reach'));
+  const totalSpend = campaigns.reduce((s,c)=>s+c.spend,0);
+  const leadSpend = leads.reduce((s,c)=>s+c.spend,0);
+  const totalLeads = leads.reduce((s,c)=>s+c.results,0);
+  const totalRev = salesData.reduce((s,r)=>s+r.amount,0);
+  const totalClicks = campaigns.reduce((s,c)=>s+c.linkClicks,0);
+  const leadImpr = leads.reduce((s,c)=>s+c.impressions,0);
+  const awareSpend = aware.reduce((s,c)=>s+c.spend,0);
+  const awareImpr = aware.reduce((s,c)=>s+c.impressions,0);
+  const aboveAvg = campaigns.filter(c=>c.quality&&c.quality.toLowerCase().includes('above')).length;
+
+  const yourCPL = totalLeads>0 ? leadSpend/totalLeads : 0;
+  const yourCTR = leads.length>0 ? leads.reduce((s,c)=>s+c.ctr,0)/leads.length : 0;
+  const yourCPC = leads.length>0 ? leads.reduce((s,c)=>s+c.cpc,0)/leads.filter(c=>c.cpc>0).length : 0;
+  const yourCPM = leadImpr>0 ? leadSpend/leadImpr*1000 : 0;
+  const yourCPMAware = awareImpr>0 ? awareSpend/awareImpr*1000 : 0;
+  const yourROAS = totalSpend>0 ? totalRev/totalSpend : 0;
+  const yourConv = totalLeads>0 ? salesData.length/totalLeads*100 : 0;
+  const yourQual = campaigns.length>0 ? aboveAvg/campaigns.length*100 : 0;
+
+  // Rating function: for metrics where lower is better (CPL, CPC, CPM)
+  function rateLower(val, bench) {
+    if(val <= bench.low) return 'above';
+    if(val <= bench.mid) return 'on-par';
+    return 'below';
+  }
+  // For metrics where higher is better (CTR, ROAS, Conv, Qual)
+  function rateHigher(val, bench) {
+    if(val >= bench.high) return 'above';
+    if(val >= bench.mid) return 'on-par';
+    return 'below';
+  }
+
+  function badgeLabel(rating) {
+    if(rating==='above') return 'Above Average';
+    if(rating==='below') return 'Below Average';
+    return 'On Par';
+  }
+
+  function barPercent(val, bench, lowerBetter) {
+    // Map value to 0-100 range for visual bar
+    if(lowerBetter) {
+      if(val <= bench.low) return 95;
+      if(val >= bench.high) return 15;
+      return Math.max(15, Math.min(95, 95 - (val-bench.low)/(bench.high-bench.low)*80));
+    } else {
+      if(val >= bench.high) return 95;
+      if(val <= bench.low) return 15;
+      return Math.max(15, Math.min(95, 15 + (val-bench.low)/(bench.high-bench.low)*80));
+    }
+  }
+
+  function barColor(rating) {
+    if(rating==='above') return 'var(--green)';
+    if(rating==='below') return 'var(--red)';
+    return 'var(--yellow)';
+  }
+
+  function formatVal(val, unit) {
+    if(unit==='$') return fd(val);
+    if(unit==='%') return fp(val);
+    if(unit==='x') return val.toFixed(2)+'x';
+    return val.toFixed(1);
+  }
+
+  function benchCard(metricKey, yourVal, lowerIsBetter) {
+    const b = BENCH[metricKey];
+    const rating = lowerIsBetter ? rateLower(yourVal, b) : rateHigher(yourVal, b);
+    const pct = barPercent(yourVal, b, lowerIsBetter);
+    const col = barColor(rating);
+    const yourClass = rating==='above'?'green':rating==='below'?'red':'';
+    return `<div class="bench-card ${rating}">
+      <div class="bench-header">
+        <div class="bench-metric">${b.label}</div>
+        <div class="bench-badge ${rating}">${rating==='above'?'&#x2705;':rating==='below'?'&#x26A0;':'&#x2796;'} ${badgeLabel(rating)}</div>
+      </div>
+      <div class="bench-values">
+        <div class="bench-yours ${yourClass}">${formatVal(yourVal, b.unit)}</div>
+        <div class="bench-industry">Industry avg: ${formatVal(b.mid, b.unit)}</div>
+      </div>
+      <div class="bench-bar"><div class="bench-bar-fill" style="width:${pct}%;background:${col}"></div></div>
+      <div class="bench-note">${b.note}</div>
+    </div>`;
+  }
+
+  let html = '';
+
+  // Overall metrics
+  html += `<div class="bench-section-title"><span>&#x1F4CA;</span> Your Performance vs Industry Benchmarks</div>`;
+  html += '<div class="bench-grid">';
+  html += benchCard('cpl', yourCPL, true);
+  html += benchCard('ctr', yourCTR, false);
+  html += benchCard('cpc', yourCPC, true);
+  html += benchCard('cpm', yourCPM, true);
+  html += benchCard('cpmAware', yourCPMAware, true);
+  html += benchCard('roas', yourROAS, false);
+  html += benchCard('convRate', yourConv, false);
+  html += benchCard('qualScore', yourQual, false);
+  html += '</div>';
+
+  // Per-campaign benchmark table
+  html += `<div class="bench-section-title"><span>&#x1F3AF;</span> Campaign-by-Campaign Rating</div>`;
+  html += `<div class="tbl-card"><div class="tbl-scroll"><table><thead><tr>
+    <th>Campaign</th><th>Type</th><th class="r">CPL / CPR</th><th class="r">CTR</th><th class="r">CPC</th><th class="r">CPM</th><th>Rating</th>
+  </tr></thead><tbody>`;
+
+  campaigns.forEach(c => {
+    const isLead = c.resultType.toLowerCase().includes('lead');
+    const isAware = c.resultType.toLowerCase().includes('reach');
+    const type = isLead ? 'Lead Gen' : 'Awareness';
+
+    // Rate each metric
+    let scores = 0, total = 0;
+    if(isLead && c.cpr > 0) {
+      const r = rateLower(c.cpr, BENCH.cpl);
+      scores += r==='above'?3:r==='on-par'?2:1; total++;
+    }
+    if(c.ctr > 0.01) {
+      const r = rateHigher(c.ctr, BENCH.ctr);
+      scores += r==='above'?3:r==='on-par'?2:1; total++;
+    }
+    if(c.cpc > 0) {
+      const r = rateLower(c.cpc, BENCH.cpc);
+      scores += r==='above'?3:r==='on-par'?2:1; total++;
+    }
+    if(c.cpm > 0) {
+      const bench = isAware ? BENCH.cpmAware : BENCH.cpm;
+      const r = rateLower(c.cpm, bench);
+      scores += r==='above'?3:r==='on-par'?2:1; total++;
+    }
+
+    const avg = total>0?scores/total:0;
+    const overall = avg>=2.5?'above':avg>=1.5?'on-par':'below';
+    const stars = avg>=2.5?'&#x2B50;&#x2B50;&#x2B50;':avg>=2?'&#x2B50;&#x2B50;':'&#x2B50;';
+
+    function cellColor(val, bench, lowerBetter) {
+      if(!val||val<=0) return 'var(--text-muted)';
+      const r = lowerBetter ? rateLower(val,bench) : rateHigher(val,bench);
+      return r==='above'?'var(--green)':r==='below'?'var(--red)':'var(--yellow)';
+    }
+
+    html += `<tr>
+      <td style="font-weight:600">${c.campaign}</td>
+      <td><span class="badge ${isLead?'badge-lead':'badge-awareness'}">${type}</span></td>
+      <td class="r" style="color:${isLead&&c.cpr>0?cellColor(c.cpr,BENCH.cpl,true):'var(--text-muted)'}; font-weight:600">${c.cpr>1?fd(c.cpr):c.cpr>0?'$'+c.cpr.toFixed(4):'-'}</td>
+      <td class="r" style="color:${c.ctr>0.01?cellColor(c.ctr,BENCH.ctr,false):'var(--text-muted)'}; font-weight:600">${c.ctr>0?fp(c.ctr):'-'}</td>
+      <td class="r" style="color:${c.cpc>0?cellColor(c.cpc,BENCH.cpc,true):'var(--text-muted)'}; font-weight:600">${c.cpc>0?fd(c.cpc):'-'}</td>
+      <td class="r" style="color:${c.cpm>0?cellColor(c.cpm,isAware?BENCH.cpmAware:BENCH.cpm,true):'var(--text-muted)'}; font-weight:600">${c.cpm>0?fd(c.cpm):'-'}</td>
+      <td><span class="bench-badge ${overall}">${stars} ${badgeLabel(overall)}</span></td>
+    </tr>`;
+  });
+  html += '</tbody></table></div></div>';
+
+  // Context note
+  html += `<div style="margin-top:20px;padding:16px 20px;background:var(--accent-light);border-radius:var(--radius-sm);font-size:13px;color:var(--text-secondary);line-height:1.6;">
+    <strong style="color:var(--accent);">About these benchmarks:</strong> Industry averages are based on Meta Ads performance data for marine equipment, outdoor recreation, and B2B/B2C product categories. Benchmarks vary by region, season, and audience targeting. Use these as directional guides, not absolute targets. Your specific niche (boat anchor winches) is more specialised than broad categories, so outperforming "average" is expected with well-targeted campaigns.
+  </div>`;
+
+  $('benchmarkContent').innerHTML = html;
+}
+
+// ===== ACTION PLAN =====
+function renderActionPlan(){
+  if(!campaigns.length) return;
+
+  // Compute all the data points needed for insights
+  const totalSpend = campaigns.reduce((s,c)=>s+c.spend,0);
+  const totalSales = salesData.reduce((s,r)=>s+r.amount,0);
+  const profit = totalSales - totalSpend;
+  const roi = totalSpend>0 ? profit/totalSpend*100 : 0;
+
+  const leads = campaigns.filter(c=>c.resultType.toLowerCase().includes('lead'));
+  const aware = campaigns.filter(c=>c.resultType.toLowerCase().includes('reach'));
+  const totalLeads = leads.reduce((s,c)=>s+c.results,0);
+  const leadSpend = leads.reduce((s,c)=>s+c.spend,0);
+  const avgCPL = totalLeads>0 ? leadSpend/totalLeads : 0;
+  const convRate = totalLeads>0 ? salesData.length/totalLeads*100 : 0;
+
+  // Best and worst performers
+  const leadsWithCPR = leads.filter(c=>c.cpr>0).sort((a,b)=>a.cpr-b.cpr);
+  const bestLead = leadsWithCPR[0];
+  const worstLead = leadsWithCPR[leadsWithCPR.length-1];
+  const bestCTR = [...campaigns].filter(c=>c.ctr>0.01).sort((a,b)=>b.ctr-a.ctr)[0];
+  const worstCTR = [...campaigns].filter(c=>c.ctr>0.01).sort((a,b)=>a.ctr-b.ctr)[0];
+
+  // Awareness efficiency
+  const awareSpend = aware.reduce((s,c)=>s+c.spend,0);
+  const awareReach = aware.reduce((s,c)=>s+c.reach,0);
+  const awareCPR = awareReach>0 ? awareSpend/awareReach*1000 : 0;
+
+  // Revenue per lead
+  const revPerLead = totalLeads>0 ? totalSales/totalLeads : 0;
+
+  // Build insights
+  let insights = '';
+
+  // Section 1: Key Findings
+  insights += `<div class="action-section animate-up stagger-1">
+    <div class="action-section-title"><span>&#x1F50D;</span> Key Findings This Month</div>
+    <div class="insight-grid">
+      <div class="insight-card ${profit>=0?'positive':'negative'}">
+        <div class="insight-icon">${profit>=0?'&#x2705;':'&#x26A0;'}</div>
+        <div class="insight-title">Overall Profitability</div>
+        <div class="insight-metric ${profit>=0?'green':'red'}">${profit>=0?'+':''}${fd(profit)}</div>
+        <div class="insight-body">${profit>=0
+          ? `Ad spend of ${fd(totalSpend)} generated ${fd(totalSales)} in sales. That's a ${fp(roi)} ROI, meaning every $1 spent returned $${(1+roi/100).toFixed(2)}.`
+          : `Spending ${fd(totalSpend)} but only generating ${fd(totalSales)} in tracked sales. Need to either reduce spend or improve conversion.`
+        }</div>
+      </div>
+
+      <div class="insight-card ${avgCPL<25?'positive':avgCPL<35?'neutral':'negative'}">
+        <div class="insight-icon">&#x1F4B2;</div>
+        <div class="insight-title">Average Cost per Lead</div>
+        <div class="insight-metric">${fd(avgCPL)}</div>
+        <div class="insight-body">Generated ${fn(totalLeads)} leads across ${leads.length} campaigns. ${avgCPL<20?'This is strong. Focus on scaling what works.':avgCPL<30?'Reasonable, but there is room to optimise.':'High cost per lead. Some campaigns need attention.'}</div>
+      </div>
+
+      <div class="insight-card ${convRate>2?'positive':convRate>1?'neutral':'negative'}">
+        <div class="insight-icon">&#x1F504;</div>
+        <div class="insight-title">Lead to Sale Conversion</div>
+        <div class="insight-metric">${fp(convRate)}</div>
+        <div class="insight-body">${salesData.length} sales from ${fn(totalLeads)} leads. ${convRate<1?'Very low conversion rate. Review your follow-up process and lead quality.':convRate<3?'Decent, but improving follow-up speed and nurture sequences could lift this.':'Solid conversion rate. Focus on increasing lead volume.'} Revenue per lead: ${fd(revPerLead)}.</div>
+      </div>
+
+      ${bestLead?`<div class="insight-card positive">
+        <div class="insight-icon">&#x1F31F;</div>
+        <div class="insight-title">Top Performing Campaign</div>
+        <div class="insight-metric green">${fd(bestLead.cpr)}/lead</div>
+        <div class="insight-body"><strong>${bestLead.campaign}</strong> is delivering leads at the lowest cost with ${fn(bestLead.results)} results. This is your benchmark. Consider increasing budget here.</div>
+      </div>`:''}
+
+      ${worstLead&&worstLead!==bestLead?`<div class="insight-card negative">
+        <div class="insight-icon">&#x26A0;</div>
+        <div class="insight-title">Underperforming Campaign</div>
+        <div class="insight-metric red">${fd(worstLead.cpr)}/lead</div>
+        <div class="insight-body"><strong>${worstLead.campaign}</strong> has the highest cost per lead (${(worstLead.cpr/bestLead.cpr).toFixed(1)}x your best). Only ${fn(worstLead.results)} results for ${fd(worstLead.spend)} spent. Review creative and targeting.</div>
+      </div>`:''}
+
+      <div class="insight-card neutral">
+        <div class="insight-icon">&#x1F4E3;</div>
+        <div class="insight-title">Awareness Efficiency</div>
+        <div class="insight-metric">${fd(awareCPR)} CPM</div>
+        <div class="insight-body">${aware.length} awareness campaigns reaching ${fn(awareReach)} people for ${fd(awareSpend)}. ${awareCPR<2?'Excellent CPM rates. Brand awareness is being built efficiently.':'CPM is reasonable. Consider testing new creative to push it lower.'}</div>
+      </div>
+    </div>
+  </div>`;
+
+  // Section 2: 30-Day Action Plan
+  let steps = [];
+
+  // Step 1: Budget reallocation
+  if(bestLead && worstLead && worstLead.cpr > bestLead.cpr * 2) {
+    steps.push({
+      title: 'Reallocate Budget from Underperformers',
+      body: `Shift ${fd(worstLead.spend * 0.3)} from <strong>${worstLead.campaign.slice(0,40)}</strong> (${fd(worstLead.cpr)}/lead) to <strong>${bestLead.campaign.slice(0,40)}</strong> (${fd(bestLead.cpr)}/lead). This alone could generate an estimated ${fn(Math.round(worstLead.spend*0.3/bestLead.cpr))} additional leads at the same spend.`,
+      tag: 'quick', priority: 'high'
+    });
+  }
+
+  // Step 2: Creative refresh
+  const lowQuality = campaigns.filter(c=>c.quality&&c.quality.toLowerCase().includes('below'));
+  if(lowQuality.length) {
+    steps.push({
+      title: 'Refresh Creatives on Low Quality Campaigns',
+      body: `${lowQuality.length} campaign${lowQuality.length>1?'s have':' has'} "Below average" quality ranking: <strong>${lowQuality.map(c=>c.campaign.slice(0,30)).join(', ')}</strong>. New creative with stronger hooks and clearer CTAs will improve delivery and reduce costs. A/B test 2 to 3 new variations.`,
+      tag: 'quick', priority: 'high'
+    });
+  }
+
+  // Step 3: CTR improvement
+  if(worstCTR && worstCTR.ctr < 1) {
+    steps.push({
+      title: 'Improve Click-Through Rates',
+      body: `<strong>${worstCTR.campaign.slice(0,40)}</strong> has the lowest CTR at ${fp(worstCTR.ctr)}${bestCTR?` vs your best at ${fp(bestCTR.ctr)}`:''}.  Test new headline copy, stronger call-to-action buttons, and more compelling lead magnets. Even a 0.5% CTR lift significantly drops your CPC.`,
+      tag: 'medium', priority: 'med'
+    });
+  }
+
+  // Step 4: Conversion rate
+  if(convRate < 3) {
+    steps.push({
+      title: 'Improve Lead Follow-Up Process',
+      body: `Your ${fp(convRate)} lead-to-sale rate means ${fn(totalLeads - salesData.length)} leads didn't convert. Action items: (1) Respond to new leads within 1 hour, not 24. (2) Set up an automated email nurture sequence in Klaviyo. (3) Add a follow-up SMS touch point at Day 3. (4) Review lead form questions to pre-qualify better.`,
+      tag: 'strategic', priority: 'high'
+    });
+  }
+
+  // Step 5: Scale winners
+  if(bestLead) {
+    steps.push({
+      title: 'Scale Your Best Campaign',
+      body: `<strong>${bestLead.campaign.slice(0,40)}</strong> is delivering at ${fd(bestLead.cpr)}/lead with ${fn(bestLead.results)} results. Increase daily budget by 20% and monitor CPR over 5 days. If CPR stays within 15% of current, increase again. Target: ${fn(Math.round(bestLead.results*1.4))} leads next month.`,
+      tag: 'medium', priority: 'med'
+    });
+  }
+
+  // Step 6: Audience refinement
+  steps.push({
+    title: 'Build Lookalike Audiences from Buyers',
+    body: `You have ${salesData.length} confirmed buyers. Upload this customer list to Meta and create a 1% Lookalike Audience. This targets people who resemble your actual customers, not just leads. Test this audience in your best performing campaign alongside existing targeting.`,
+    tag: 'strategic', priority: 'med'
+  });
+
+  // Step 7: Landing page
+  const totalClicks = campaigns.reduce((s,c)=>s+c.linkClicks,0);
+  const totalLP = campaigns.reduce((s,c)=>s+c.lpViews,0);
+  const lpRate = totalClicks>0 ? totalLP/totalClicks*100 : 0;
+  if(lpRate > 0 && lpRate < 50) {
+    steps.push({
+      title: 'Fix Landing Page Drop-Off',
+      body: `Only ${fp(lpRate)} of link clicks result in a landing page view, meaning ${fp(100-lpRate)} of paid clicks are lost before the page even loads. Check page load speed (under 3 seconds), ensure mobile responsiveness, and make sure the page headline matches the ad promise.`,
+      tag: 'quick', priority: 'high'
+    });
+  }
+
+  // Step 8: Awareness to leads pipeline
+  if(aware.length && leads.length) {
+    steps.push({
+      title: 'Retarget Awareness Audiences',
+      body: `Your awareness campaigns reached ${fn(awareReach)} people. Create a retargeting campaign that shows lead-gen ads specifically to people who engaged with your awareness content. This "warm" audience typically converts at 2 to 3x the rate of cold traffic, dropping your CPL significantly.`,
+      tag: 'strategic', priority: 'med'
+    });
+  }
+
+  // Step 9: Monthly target
+  const targetLeads = Math.round(totalLeads * 1.25);
+  const targetSales = Math.round(salesData.length * 1.3);
+  const targetRevenue = totalSales * 1.3;
+  steps.push({
+    title: 'Set Next Month Targets',
+    body: `Based on current performance with optimisations applied: <strong>${fn(targetLeads)} leads</strong> (up 25%), <strong>${targetSales} sales</strong> (up 30%), <strong>${fd(targetRevenue)} revenue</strong>. Keep ad spend at ${fd(totalSpend)} or reduce by 10% while improving efficiency. Track weekly and adjust.`,
+    tag: 'strategic', priority: 'low'
+  });
+
+  insights += `<div class="action-section animate-up stagger-2">
+    <div class="action-section-title"><span>&#x1F680;</span> 30-Day Action Plan to Improve Results</div>
+    <ol class="step-list">
+      ${steps.map(s => `<li class="step-item">
+        <div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:8px;">
+          <div class="step-title">${s.title}</div>
+          <span class="priority-label priority-${s.priority}">&#x25CF; ${s.priority==='high'?'High Priority':s.priority==='med'?'Medium Priority':'Set & Review'}</span>
+        </div>
+        <div class="step-body">${s.body}</div>
+        <span class="step-tag ${s.tag}">${s.tag==='quick'?'&#x26A1; Quick Win':s.tag==='medium'?'&#x1F6E0; This Week':'&#x1F3AF; Strategic'}</span>
+      </li>`).join('')}
+    </ol>
+  </div>`;
+
+  // Section 3: KPIs to Watch
+  insights += `<div class="action-section animate-up stagger-3">
+    <div class="action-section-title"><span>&#x1F4CB;</span> KPIs to Track Next Month</div>
+    <div class="insight-grid">
+      <div class="insight-card neutral">
+        <div class="insight-icon">&#x1F3AF;</div>
+        <div class="insight-title">Target CPL</div>
+        <div class="insight-metric">Under ${fd(avgCPL * 0.85)}</div>
+        <div class="insight-body">15% reduction from current ${fd(avgCPL)} through budget reallocation and creative refresh.</div>
+      </div>
+      <div class="insight-card neutral">
+        <div class="insight-icon">&#x1F504;</div>
+        <div class="insight-title">Target Conversion Rate</div>
+        <div class="insight-metric">${fp(Math.max(convRate*1.5, 3))}</div>
+        <div class="insight-body">Up from ${fp(convRate)} through faster follow-up and better nurture sequences.</div>
+      </div>
+      <div class="insight-card neutral">
+        <div class="insight-icon">&#x1F4B0;</div>
+        <div class="insight-title">Target ROAS</div>
+        <div class="insight-metric">${totalSpend>0?((totalSales*1.3/totalSpend).toFixed(2)+'x'):'N/A'}</div>
+        <div class="insight-body">Currently ${totalSpend>0?((totalSales/totalSpend).toFixed(2)+'x'):'N/A'}. Achievable through higher conversion and maintained spend.</div>
+      </div>
+      <div class="insight-card neutral">
+        <div class="insight-icon">&#x1F4C8;</div>
+        <div class="insight-title">Target Revenue</div>
+        <div class="insight-metric">${fd(targetRevenue)}</div>
+        <div class="insight-body">30% increase from ${fd(totalSales)} through scaling best campaigns and improving follow-up.</div>
+      </div>
+    </div>
+  </div>`;
+
+  $('actionContent').innerHTML = insights;
+}
+
+function showToast(msg,err){const t=$('toast');t.innerHTML=(err?'&#x26A0;':'&#x2705;')+' '+msg;t.style.borderColor=err?'var(--red)':'var(--green)';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
+
+// ===== DEMO DATA =====
+function loadDemoData(){
+  campaigns=[
+    {campaign:'New Leads Campaign - State Targets',ads:'New Leads Ad - QLD/NT; New Leads Ad - WA; and 3 more ads',resultType:'Meta leads',results:264,reach:145121,frequency:3.09,cpr:26.58,spend:7016.58,impressions:448938,cpm:15.63,linkClicks:3775,cpc:1.86,ctr:0.84,allClicks:6104,allCtr:1.36,lpViews:48,starts:'2026-03-01',ends:'2026-03-31',quality:'-'},
+    {campaign:'USA Lead Ads PNW (exc AK)',ads:'USA PNW Oct25 Tailored leads campaign 24/10/2025 Ad',resultType:'Leads (form)',results:200,reach:71115,frequency:2.51,cpr:14.35,spend:2869.82,impressions:178273,cpm:16.10,linkClicks:1959,cpc:1.46,ctr:1.10,allClicks:3250,allCtr:1.82,lpViews:182,starts:'2026-03-01',ends:'2026-03-31',quality:'Above average'},
+    {campaign:'USA Lead Ads - AK Only (Main)',ads:'USA PNW Oct25 Tailored leads campaign 24/10/2025 Ad - Copy',resultType:'Leads (form)',results:43,reach:13082,frequency:3.28,cpr:26.66,spend:1146.59,impressions:42925,cpm:26.71,linkClicks:724,cpc:1.58,ctr:1.69,allClicks:933,allCtr:2.17,lpViews:31,starts:'2026-03-01',ends:'2026-03-31',quality:'Above average'},
+    {campaign:'New Leads - Pot Hauler',ads:'New Leads Ad - WA - Pot Hauler; New Leads Ad - TAS/SA - Pot Hauler',resultType:'Meta leads',results:72,reach:49342,frequency:1.91,cpr:14.50,spend:1043.72,impressions:94064,cpm:11.10,linkClicks:707,cpc:1.48,ctr:0.75,allClicks:1075,allCtr:1.14,lpViews:10,starts:'2026-03-01',ends:'2026-03-31',quality:'-'},
+    {campaign:'Awareness - Winches',ads:'New Awareness Ad - Winches',resultType:'Reach',results:276761,reach:276761,frequency:1.74,cpr:0.002,spend:562.89,impressions:481990,cpm:1.17,linkClicks:12,cpc:46.91,ctr:0.002,allClicks:385,allCtr:0.08,lpViews:0,starts:'2026-03-01',ends:'2026-03-31',quality:'Above average'},
+    {campaign:'USA Lead Ads - AK Only (Alt)',ads:'USA PNW Oct25 Tailored leads campaign 24/10/2025 Ad',resultType:'Leads (form)',results:8,reach:9368,frequency:2.17,cpr:51.50,spend:411.98,impressions:20284,cpm:20.31,linkClicks:291,cpc:1.42,ctr:1.43,allClicks:411,allCtr:2.03,lpViews:6,starts:'2026-03-01',ends:'2026-03-31',quality:'Above average'},
+    {campaign:'Awareness - Pot Hauler',ads:'New Awareness Ad - Pot Hauler',resultType:'Reach',results:121459,reach:121459,frequency:1.47,cpr:0.003,spend:310.70,impressions:177963,cpm:1.75,linkClicks:80,cpc:3.88,ctr:0.04,allClicks:238,allCtr:0.13,lpViews:42,starts:'2026-03-01',ends:'2026-03-31',quality:'Average'},
+    {campaign:'Awareness - PW',ads:'New Awareness Ad - PW; and 1 more ad',resultType:'Reach',results:81156,reach:81156,frequency:1.63,cpr:0.003,spend:232.96,impressions:132118,cpm:1.76,linkClicks:79,cpc:2.95,ctr:0.06,allClicks:99,allCtr:0.07,lpViews:0,starts:'2026-03-01',ends:'2026-03-31',quality:'-'},
+    {campaign:'USA Lead Ads PNW (exc AK) - Copy',ads:'USA PNW Oct25 Tailored leads campaign 24/10/2025 Ad - Copy',resultType:'Leads (form)',results:13,reach:8551,frequency:1.69,cpr:17.72,spend:230.38,impressions:14438,cpm:15.96,linkClicks:164,cpc:1.40,ctr:1.14,allClicks:254,allCtr:1.76,lpViews:11,starts:'2026-03-01',ends:'2026-03-31',quality:'Above average'},
+    {campaign:'Awareness - Trailer Winch WH',ads:'New Awareness Ad - Trailer Winch WH',resultType:'Reach',results:96796,reach:96796,frequency:1.26,cpr:0.002,spend:208.25,impressions:121560,cpm:1.71,linkClicks:68,cpc:3.06,ctr:0.06,allClicks:123,allCtr:0.10,lpViews:0,starts:'2026-03-01',ends:'2026-03-31',quality:'Average'},
+    {campaign:'Awareness - Anchors',ads:'New Awareness Ad - Anchors',resultType:'Reach',results:39945,reach:39945,frequency:1.22,cpr:0.001,spend:56.30,impressions:48931,cpm:1.15,linkClicks:0,cpc:0,ctr:0,allClicks:89,allCtr:0.18,lpViews:0,starts:'2026-03-01',ends:'2026-03-31',quality:'Below average - bottom 35% of ads'}
+  ];
+  salesData=[
+    {customer:'Casey Ison',ad_id:'CRM',invoice:'INV-000534',date:'2026-03-09',amount:3500.00},
+    {customer:'AF TOOLS PTY LTD',ad_id:'CRM',invoice:'INV-000491',date:'2026-03-02',amount:3463.65},
+    {customer:'Damian Bennett',ad_id:'Shaun',invoice:'INV-000656',date:'2026-03-31',amount:3236.36},
+    {customer:'William Brunker',ad_id:'Shaun',invoice:'INV-000586',date:'2026-03-19',amount:3005.28},
+    {customer:'Chungie Lah',ad_id:'CRM',invoice:'INV-000655',date:'2026-03-31',amount:2909.09},
+    {customer:'Kevin Enniss',ad_id:'Shaun',invoice:'INV-000573',date:'2026-03-17',amount:2871.73},
+    {customer:'Gavin McGahan',ad_id:'CRM',invoice:'INV-000609',date:'2026-03-24',amount:2822.18},
+    {customer:'Tiny Jeffs',ad_id:'CRM',invoice:'INV-000654',date:'2026-03-31',amount:2727.27},
+    {customer:'Shayne Curley',ad_id:'CRM',invoice:'INV-000577',date:'2026-03-17',amount:2727.27},
+    {customer:'Kiet Lam',ad_id:'CRM',invoice:'INV-000529',date:'2026-03-09',amount:2545.45},
+    {customer:'Marine Engineering & Diving',ad_id:'Shaun',invoice:'INV-000651',date:'2026-03-31',amount:2425.37},
+    {customer:'John Earl',ad_id:'CRM',invoice:'INV-000618',date:'2026-03-25',amount:2245.46},
+    {customer:'Andy Hansen',ad_id:'CRM',invoice:'INV-000535',date:'2026-03-09',amount:2227.28},
+    {customer:'Harley Luciano Calderwell',ad_id:'CRM',invoice:'INV-000629',date:'2026-03-26',amount:2090.91},
+    {customer:'Paul Slym',ad_id:'Shaun',invoice:'INV-000604',date:'2026-03-23',amount:2040.01},
+    {customer:'Elnick Adventures',ad_id:'Shaun',invoice:'INV-000502',date:'2026-03-03',amount:1772.73},
+    {customer:'Jeff Wyckelsma',ad_id:'Shaun',invoice:'INV-000547',date:'2026-03-11',amount:1709.63},
+    {customer:'Damien Rimland',ad_id:'Shaun',invoice:'INV-000565',date:'2026-03-16',amount:1490.91},
+    {customer:'Wayne Griffiths',ad_id:'Shaun',invoice:'INV-000606',date:'2026-03-23',amount:1331.82},
+    {customer:'Bailey Cole',ad_id:'CRM',invoice:'INV-000605',date:'2026-03-23',amount:1272.73},
+    {customer:'Rusty Pulham',ad_id:'Shaun',invoice:'INV-000514',date:'2026-03-05',amount:1159.09},
+    {customer:'Sales - AU',ad_id:'FB Ads',invoice:'',date:'2026-03-31',amount:392.41},
+    {customer:'Sales - USA',ad_id:'FB Ads',invoice:'',date:'2026-03-31',amount:27737.22}
+  ];
+  renderAll();saveSessionData();showToast('Loaded March 2026 data');
+}
+
+// ===== CAMPAIGN IMAGE HANDLING =====
+function triggerImgUpload(idx) {
+  $('imgInput-'+idx).click();
+}
+
+function handleImgSelect(file, idx) {
+  if(!file || !file.type.startsWith('image/')) return;
+  readImgFile(file, idx);
+}
+
+function handleImgDrop(e, idx) {
+  e.preventDefault();
+  e.stopPropagation();
+  const zone = e.currentTarget;
+  zone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if(!file || !file.type.startsWith('image/')) return;
+  readImgFile(file, idx);
+}
+
+function readImgFile(file, idx) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    // Resize to keep file size manageable
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      const maxW = 600;
+      const scale = Math.min(1, maxW / img.width);
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      campImages[idx] = dataUrl;
+      saveCampImages();
+      updateImgZone(idx);
+      showToast('Image added to campaign');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeImg(idx) {
+  delete campImages[idx];
+  saveCampImages();
+  updateImgZone(idx);
+}
+
+function updateImgZone(idx) {
+  const zone = document.querySelector(`.camp-img-zone[data-idx="${idx}"]`);
+  if(!zone) return;
+  const saved = campImages[idx] || '';
+  zone.innerHTML = saved
+    ? `<img src="${saved}" alt="Ad creative"><button class="camp-img-remove" onclick="event.stopPropagation();removeImg(${idx})" title="Remove image">&times;</button>`
+    : `<div class="camp-img-placeholder"><div class="icon">&#x1F5BC;</div><p>Drop ad creative here<br>or <strong>click to upload</strong></p></div>`;
+}
+
+function bindImgZones() {
+  // Re-attach file input listeners after re-render
+  document.querySelectorAll('.camp-img-zone').forEach(zone => {
+    const idx = parseInt(zone.dataset.idx);
+    zone.onclick = function(e) {
+      if(e.target.classList.contains('camp-img-remove')) return;
+      $('imgInput-'+idx).click();
+    };
+  });
+}
+
+// ===== INDEXEDDB STORAGE =====
+const DB_NAME = 'SavwinchDashboard';
+const DB_VERSION = 2;
+const IMG_STORE = 'campaignImages';
+const DATA_STORE = 'sessionData';
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if(!db.objectStoreNames.contains(IMG_STORE)) db.createObjectStore(IMG_STORE);
+      if(!db.objectStoreNames.contains(DATA_STORE)) db.createObjectStore(DATA_STORE);
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+// --- Campaign Images ---
+async function saveCampImages() {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(IMG_STORE, 'readwrite');
+    const store = tx.objectStore(IMG_STORE);
+    store.clear();
+    for (const [key, val] of Object.entries(campImages)) {
+      store.put(val, 'img_' + key);
+    }
+    await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = rej; });
+    db.close();
+  } catch(e) { console.warn('Save images failed:', e); }
+}
+
+async function loadCampImages() {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(IMG_STORE, 'readonly');
+    const store = tx.objectStore(IMG_STORE);
+    const allKeys = await new Promise((res, rej) => { const r = store.getAllKeys(); r.onsuccess = () => res(r.result); r.onerror = rej; });
+    for (const key of allKeys) {
+      const val = await new Promise((res, rej) => { const r = store.get(key); r.onsuccess = () => res(r.result); r.onerror = rej; });
+      const idx = key.replace('img_', '');
+      campImages[idx] = val;
+    }
+    db.close();
+    if (campaigns.length) {
+      document.querySelectorAll('.camp-img-zone').forEach(zone => {
+        const idx = zone.dataset.idx;
+        if (campImages[idx]) updateImgZone(parseInt(idx));
+      });
+    }
+  } catch(e) { campImages = {}; }
+}
+
+// --- Session Data (campaigns + sales) ---
+async function saveSessionData() {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(DATA_STORE, 'readwrite');
+    const store = tx.objectStore(DATA_STORE);
+    store.put(JSON.stringify(campaigns), 'campaigns');
+    store.put(JSON.stringify(salesData), 'salesData');
+    store.put(new Date().toISOString(), 'savedAt');
+    await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = rej; });
+    db.close();
+  } catch(e) { console.warn('Save session failed:', e); }
+}
+
+async function loadSessionData() {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(DATA_STORE, 'readonly');
+    const store = tx.objectStore(DATA_STORE);
+    const getCampaigns = new Promise((res, rej) => { const r=store.get('campaigns'); r.onsuccess=()=>res(r.result); r.onerror=rej; });
+    const getSales = new Promise((res, rej) => { const r=store.get('salesData'); r.onsuccess=()=>res(r.result); r.onerror=rej; });
+    const getSavedAt = new Promise((res, rej) => { const r=store.get('savedAt'); r.onsuccess=()=>res(r.result); r.onerror=rej; });
+    const [campJSON, salesJSON, savedAt] = await Promise.all([getCampaigns, getSales, getSavedAt]);
+    db.close();
+    if(campJSON) {
+      campaigns = JSON.parse(campJSON);
+      if(salesJSON) salesData = JSON.parse(salesJSON);
+      if(campaigns.length) {
+        renderAll();
+        await loadCampImages();
+        const when = savedAt ? new Date(savedAt).toLocaleDateString('en-AU') : 'previously';
+        showToast('Restored saved session from '+when);
+        return true;
+      }
+    }
+  } catch(e) { console.warn('Load session failed:', e); }
+  return false;
+}
+
+document.addEventListener('DOMContentLoaded', async function() {
+  // Try loading saved session from IndexedDB (user-uploaded data takes priority)
+  const loaded = await loadSessionData();
+  // If nothing was saved, auto-load the built-in March 2026 data
+  if(!campaigns.length) loadDemoData();
+});
+
+// ===== SAVE & SHARE =====
+async function exportShareable() {
+  if(!campaigns.length) { showToast('Upload data first', true); return; }
+
+  const btn = $('btnShare');
+  const origBtn = btn.innerHTML;
+  btn.innerHTML = '&#x23F3; Building export...';
+  btn.disabled = true;
+
+  try {
+    // Fetch the ORIGINAL clean source HTML (not the live DOM)
+    let srcHTML;
+    try {
+      const resp = await fetch(location.href);
+      srcHTML = await resp.text();
+    } catch(e) {
+      // Fallback for local files: reconstruct from DOCTYPE + outerHTML
+      srcHTML = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    }
+
+    // Build embedded data block as a self-contained script
+    const dataBlock = {
+      campaigns: campaigns,
+      salesData: salesData,
+      campImages: campImages
+    };
+    const jsonPayload = JSON.stringify(dataBlock);
+
+    // Inject a data-payload script tag right before </head>
+    // This script runs before DOMContentLoaded fires and seeds the data
+    const payloadScript = `
+<script id="embedded-data">
+(function(){
+  window.__EMBEDDED_DATA__ = ${jsonPayload};
+})();
+<\/script>
+`;
+    // Insert payload before closing </head>
+    let newHTML = srcHTML.replace('</head>', payloadScript + '</head>');
+
+    // Now patch the DOMContentLoaded handler to check for embedded data first
+    // Find existing DOMContentLoaded block and add embedded data loading
+    const embedLoader = `
+  // Check for embedded data (from Export Dashboard)
+  if(window.__EMBEDDED_DATA__) {
+    const d = window.__EMBEDDED_DATA__;
+    campaigns = d.campaigns || [];
+    salesData = d.salesData || [];
+    campImages = d.campImages || {};
+    renderAll();
+    // Restore images
+    setTimeout(function(){ Object.keys(campImages).forEach(function(idx){ updateImgZone(parseInt(idx)); }); }, 200);
+    showToast('Dashboard loaded');
+    delete window.__EMBEDDED_DATA__;
+    return;
+  }
+`;
+
+    // Inject right after DOMContentLoaded async function opens
+    newHTML = newHTML.replace(
+      "document.addEventListener('DOMContentLoaded', async function() {",
+      "document.addEventListener('DOMContentLoaded', async function() {" + embedLoader
+    );
+
+    // Download as index.html
+    const blob = new Blob([newHTML], {type:'text/html'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'index.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('index.html downloaded — drag into Netlify Drop to share');
+  } catch(err) {
+    console.error('Export error:', err);
+    showToast('Export failed: ' + err.message, true);
+  } finally {
+    btn.innerHTML = origBtn;
+    btn.disabled = false;
+  }
+}
+
+// ===== PDF EXPORT (Full visual capture) =====
+async function exportPDF() {
+  if(!campaigns.length) { showToast('Upload data first', true); return; }
+  const btn = $('btnExportPdf');
+  const origText = btn.innerHTML;
+  btn.innerHTML = '&#x23F3; Generating PDF...';
+  btn.disabled = true;
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
+    const W = pdf.internal.pageSize.getWidth();  // 297
+    const H = pdf.internal.pageSize.getHeight(); // 210
+    const m = 10; // margin
+    const cW = W - m*2; // content width
+    const dateStr = new Date().toLocaleDateString('en-AU');
+    const dateRange = campaigns[0].starts && campaigns[0].ends ? campaigns[0].starts+' to '+campaigns[0].ends : '';
+    let pageNum = 0;
+
+    // Color helpers
+    const COL = {
+      accent:[67,97,238], green:[16,185,129], red:[239,68,68], purple:[139,92,246],
+      yellow:[245,158,11], blue:[59,130,246], text:[26,29,46], sub:[95,101,119],
+      muted:[156,163,180], white:[255,255,255], bg:[245,247,250], border:[229,231,235],
+      card:[255,255,255], greenLight:[236,253,245], redLight:[254,242,242],
+      purpleLight:[245,243,255], yellowLight:[255,251,235], blueLight:[239,246,255]
+    };
+    function setC(c){pdf.setTextColor(c[0],c[1],c[2]);}
+    function setF(c){pdf.setFillColor(c[0],c[1],c[2]);}
+    function setD(c){pdf.setDrawColor(c[0],c[1],c[2]);}
+
+    // Header on each page
+    function drawPageHeader(tabLabel) {
+      pageNum++;
+      setF(COL.accent);
+      pdf.rect(0,0,W,12,'F');
+      setC(COL.white);
+      pdf.setFontSize(12); pdf.setFont('helvetica','bold');
+      pdf.text('Savwinch Meta Ads Report', m, 8);
+      pdf.setFontSize(9); pdf.setFont('helvetica','normal');
+      pdf.text(tabLabel + '  |  ' + dateStr, W-m, 8, {align:'right'});
+      if(dateRange) {
+        pdf.setFontSize(7);
+        pdf.text('Period: ' + dateRange, W/2, 8, {align:'center'});
+      }
+    }
+    function drawPageFooter() {
+      setC(COL.muted); pdf.setFontSize(6.5);
+      pdf.text('Generated from savwinch.netlify.app', m, H-4);
+      pdf.text('Page '+pageNum, W-m, H-4, {align:'right'});
+    }
+
+    // KPI box helper
+    function drawKPI(x, y, w, h, icon, label, value, sub, borderColor) {
+      setF(COL.card); setD(COL.border);
+      pdf.roundedRect(x, y, w, h, 2, 2, 'FD');
+      if(borderColor) { setF(borderColor); pdf.rect(x, y, w, 1.5, 'F'); }
+      pdf.setFontSize(13); pdf.text(icon, x+4, y+8);
+      setC(COL.muted); pdf.setFontSize(7); pdf.setFont('helvetica','bold');
+      pdf.text(label.toUpperCase(), x+4, y+14);
+      setC(COL.text); pdf.setFontSize(14); pdf.setFont('helvetica','bold');
+      // Auto-shrink value text
+      let fs=14;
+      while(fs>7 && pdf.getTextWidth(value)>w-8){fs--;pdf.setFontSize(fs);}
+      pdf.text(value, x+4, y+22);
+      setC(COL.sub); pdf.setFontSize(7); pdf.setFont('helvetica','normal');
+      pdf.text(sub.slice(0,50), x+4, y+27);
+    }
+
+    // Chart capture helper
+    function getChartImage(chartId) {
+      try {
+        const el = $(chartId);
+        if(el && el.tagName === 'CANVAS') return el.toDataURL('image/png');
+      } catch(e){}
+      return null;
+    }
+
+    // Wrapped text helper
+    function drawWrapped(x, y, maxW, text, fontSize, color, lineH) {
+      pdf.setFontSize(fontSize); setC(color); pdf.setFont('helvetica','normal');
+      const lines = pdf.splitTextToSize(text, maxW);
+      lines.forEach((line, i) => { pdf.text(line, x, y + i * (lineH||fontSize*0.4)); });
+      return y + lines.length * (lineH||fontSize*0.4);
+    }
+
+    // ==================== PAGE 1: OVERVIEW ====================
+    drawPageHeader('Overview');
+    let y = 16;
+
+    // Compute totals
+    const t = campaigns.reduce((s,c)=>{s.spend+=c.spend;s.results+=c.results;s.reach+=c.reach;s.impr+=c.impressions;s.clicks+=c.linkClicks;return s;},{spend:0,results:0,reach:0,impr:0,clicks:0});
+    const leads = campaigns.filter(c=>c.resultType.toLowerCase().includes('lead'));
+    const aware = campaigns.filter(c=>c.resultType.toLowerCase().includes('reach'));
+    const leadR = leads.reduce((s,c)=>s+c.results,0);
+    const leadS = leads.reduce((s,c)=>s+c.spend,0);
+
+    // KPI row
+    const kW = (cW-10)/6;
+    const kpis = [
+      {icon:'\uD83D\uDCB5',label:'Total Ad Spend',val:fd(t.spend),sub:campaigns.length+' campaigns',col:COL.accent},
+      {icon:'\uD83C\uDFAF',label:'Total Leads',val:fn(leadR),sub:fd(leadS)+' on leads',col:COL.green},
+      {icon:'\uD83D\uDCB2',label:'Avg Cost/Lead',val:leadR>0?fd(leadS/leadR):'-',sub:leads.length+' lead campaigns',col:COL.yellow},
+      {icon:'\uD83D\uDCE3',label:'Total Reach',val:fn(t.reach),sub:fn(t.impr)+' impressions',col:COL.purple},
+      {icon:'\uD83D\uDD17',label:'Link Clicks',val:fn(t.clicks),sub:'CTR: '+(t.impr>0?fp(t.clicks/t.impr*100):'-'),col:COL.blue},
+      {icon:'\uD83D\uDCCA',label:'Avg CPM',val:t.impr>0?fd(t.spend/t.impr*1000):'-',sub:'Cost per 1,000 impr.',col:COL.red}
+    ];
+    kpis.forEach((k,i) => drawKPI(m + i*(kW+2), y, kW, 30, k.icon, k.label, k.val, k.sub, k.col));
+    y += 35;
+
+    // Charts
+    const chartOverview = getChartImage('chartOverview');
+    const chartDoughnut = getChartImage('chartDoughnut');
+    const chartReach = getChartImage('chartReach');
+    const chartH = 70;
+    if(chartOverview) {
+      setC(COL.text); pdf.setFontSize(10); pdf.setFont('helvetica','bold');
+      pdf.text('Spend & Results by Campaign', m, y+2);
+      pdf.addImage(chartOverview, 'PNG', m, y+4, cW, chartH);
+      y += chartH + 8;
+    }
+    if(chartDoughnut && chartReach) {
+      const halfW = (cW-4)/2;
+      setC(COL.text); pdf.setFontSize(10); pdf.setFont('helvetica','bold');
+      pdf.text('Results Distribution', m, y+2);
+      pdf.text('Reach vs Impressions', m+halfW+4, y+2);
+      if(chartDoughnut) pdf.addImage(chartDoughnut, 'PNG', m, y+4, halfW, chartH);
+      if(chartReach) pdf.addImage(chartReach, 'PNG', m+halfW+4, y+4, halfW, chartH);
+      y += chartH + 8;
+    }
+    drawPageFooter();
+
+    // ==================== PAGE 2: CAMPAIGNS ====================
+    pdf.addPage('a4','landscape');
+    drawPageHeader('Campaigns');
+    y = 16;
+
+    // Campaign KPIs
+    const bestCPR = leads.filter(c=>c.cpr>0).sort((a,b)=>a.cpr-b.cpr)[0];
+    const bestCTR = [...campaigns].filter(c=>c.ctr>0.01).sort((a,b)=>b.ctr-a.ctr)[0];
+    const ar = aware.reduce((s,c)=>s+c.reach,0);
+    const as2 = aware.reduce((s,c)=>s+c.spend,0);
+    const campKpis = [
+      {icon:'\uD83D\uDCCB',label:'Lead Campaigns',val:fn(leadR)+' leads',sub:fd(leadS)+' | '+(leadR>0?fd(leadS/leadR):'-')+'/lead',col:COL.accent},
+      {icon:'\uD83D\uDCE2',label:'Awareness Campaigns',val:fn(ar)+' reach',sub:fd(as2)+' spent',col:COL.purple},
+      {icon:'\u2B50',label:'Best Cost/Lead',val:bestCPR?fd(bestCPR.cpr):'-',sub:bestCPR?bestCPR.campaign.slice(0,40):'',col:COL.green},
+      {icon:'\uD83D\uDD17',label:'Highest CTR',val:bestCTR?fp(bestCTR.ctr):'-',sub:bestCTR?bestCTR.campaign.slice(0,40):'',col:COL.yellow}
+    ];
+    const ckW = (cW-6)/4;
+    campKpis.forEach((k,i) => drawKPI(m + i*(ckW+2), y, ckW, 30, k.icon, k.label, k.val, k.sub, k.col));
+    y += 35;
+
+    // Campaign table
+    setC(COL.text); pdf.setFontSize(10); pdf.setFont('helvetica','bold');
+    pdf.text('All Campaigns', m, y); y += 4;
+
+    // Table header
+    const cols = [{l:'Campaign',w:55},{l:'Type',w:22},{l:'Spend',w:22},{l:'Results',w:18},{l:'Cost/Result',w:22},{l:'Reach',w:22},{l:'Impr.',w:22},{l:'Clicks',w:18},{l:'CTR',w:14},{l:'CPC',w:18},{l:'CPM',w:18},{l:'Quality',w:26}];
+    setF([240,242,248]); pdf.rect(m, y, cW, 6, 'F');
+    let cx = m;
+    setC(COL.sub); pdf.setFontSize(6.5); pdf.setFont('helvetica','bold');
+    cols.forEach(c => { pdf.text(c.l, cx+1, y+4); cx+=c.w; });
+    y += 7;
+
+    // Table rows
+    pdf.setFont('helvetica','normal');
+    campaigns.forEach((c,i) => {
+      if(y > H - 15) {
+        drawPageFooter();
+        pdf.addPage('a4','landscape');
+        drawPageHeader('Campaigns (cont.)');
+        y = 16;
+        setF([240,242,248]); pdf.rect(m, y, cW, 6, 'F');
+        cx = m; setC(COL.sub); pdf.setFontSize(6.5); pdf.setFont('helvetica','bold');
+        cols.forEach(col => { pdf.text(col.l, cx+1, y+4); cx+=col.w; });
+        y += 7; pdf.setFont('helvetica','normal');
+      }
+      if(i%2===0){ setF([250,251,253]); pdf.rect(m, y-1, cW, 6, 'F'); }
+      cx = m; pdf.setFontSize(6);
+      const isLead = c.resultType.toLowerCase().includes('lead');
+      setC(COL.text); pdf.text(c.campaign.slice(0,45), cx+1, y+3); cx+=cols[0].w;
+      setC(isLead?COL.green:COL.purple); pdf.text(isLead?'Lead Gen':'Awareness', cx+1, y+3); cx+=cols[1].w;
+      setC(COL.text);
+      pdf.text(fd(c.spend), cx+1, y+3); cx+=cols[2].w;
+      pdf.text(fn(c.results), cx+1, y+3); cx+=cols[3].w;
+      pdf.text(c.cpr>1?fd(c.cpr):c.cpr>0?'$'+c.cpr.toFixed(4):'-', cx+1, y+3); cx+=cols[4].w;
+      pdf.text(fn(c.reach), cx+1, y+3); cx+=cols[5].w;
+      pdf.text(fn(c.impressions), cx+1, y+3); cx+=cols[6].w;
+      pdf.text(fn(c.linkClicks), cx+1, y+3); cx+=cols[7].w;
+      pdf.text(c.ctr>0?fp(c.ctr):'-', cx+1, y+3); cx+=cols[8].w;
+      pdf.text(c.cpc>0?fd(c.cpc):'-', cx+1, y+3); cx+=cols[9].w;
+      pdf.text(c.cpm>0?fd(c.cpm):'-', cx+1, y+3); cx+=cols[10].w;
+      const q = c.quality||'-';
+      setC(q.toLowerCase().includes('above')?COL.green:q.toLowerCase().includes('below')?COL.red:COL.muted);
+      pdf.text(q.slice(0,22), cx+1, y+3);
+      y += 6;
+    });
+    y += 4;
+
+    // Campaign charts
+    const chartCPR = getChartImage('chartCPR');
+    const chartBubble = getChartImage('chartBubble');
+    if(chartCPR || chartBubble) {
+      if(y > H - 50) {
+        drawPageFooter(); pdf.addPage('a4','landscape'); drawPageHeader('Campaigns (charts)'); y=16;
+      }
+      const halfW = (cW-4)/2;
+      if(chartCPR) {
+        setC(COL.text); pdf.setFontSize(9); pdf.setFont('helvetica','bold');
+        pdf.text('Cost per Result', m, y+2);
+        pdf.addImage(chartCPR, 'PNG', m, y+4, halfW, 65);
+      }
+      if(chartBubble) {
+        setC(COL.text); pdf.setFontSize(9); pdf.setFont('helvetica','bold');
+        pdf.text('CTR vs CPC (bubble = spend)', m+halfW+4, y+2);
+        pdf.addImage(chartBubble, 'PNG', m+halfW+4, y+4, halfW, 65);
+      }
+    }
+    drawPageFooter();
+
+    // ==================== PAGE 3: COST VS SALES ====================
+    pdf.addPage('a4','landscape');
+    drawPageHeader('Cost vs Sales');
+    y = 16;
+
+    const ts = campaigns.reduce((s,c)=>s+c.spend,0);
+    const tr = salesData.reduce((s,r)=>s+r.amount,0);
+    const profit = tr-ts;
+    const roi = ts>0?profit/ts*100:0;
+    const marginPct = tr>0?profit/tr*100:0;
+    const aov = salesData.length>0?tr/salesData.length:0;
+    const cps = salesData.length>0?ts/salesData.length:0;
+    const tl = leads.reduce((s,c)=>s+c.results,0);
+
+    const pKpis = [
+      {icon:'\uD83D\uDCB5',label:'Ad Spend',val:fd(ts),sub:campaigns.length+' campaigns',col:COL.accent},
+      {icon:'\uD83D\uDED2',label:'Sales Revenue',val:fd(tr),sub:salesData.length+' orders',col:COL.green},
+      {icon:'\uD83D\uDCB0',label:'Gross Profit',val:(profit>=0?'+':'')+fd(profit),sub:'Margin: '+fp(marginPct),col:profit>=0?COL.green:COL.red},
+      {icon:'\uD83D\uDCC8',label:'Ad ROI',val:(roi>=0?'+':'')+fp(roi),sub:'Return on ad invest',col:roi>=0?COL.green:COL.red},
+      {icon:'\uD83D\uDED2',label:'Avg Order Value',val:fd(aov),sub:salesData.length+' orders',col:COL.yellow},
+      {icon:'\uD83C\uDFF7',label:'Cost per Sale',val:fd(cps),sub:'Ad spend / orders',col:COL.red},
+      {icon:'\uD83D\uDD04',label:'Lead to Sale',val:tl>0?fp(salesData.length/tl*100):'N/A',sub:salesData.length+' sales from '+fn(tl)+' leads',col:COL.purple},
+      {icon:'\uD83D\uDCB2',label:'Revenue/Lead',val:tl>0?fd(tr/tl):'N/A',sub:'Total sales / leads',col:COL.blue}
+    ];
+    const pkW = (cW-14)/8;
+    pKpis.forEach((k,i) => drawKPI(m+i*(pkW+2), y, pkW, 30, k.icon, k.label, k.val, k.sub, k.col));
+    y += 35;
+
+    // Profit chart
+    const chartProfit = getChartImage('chartProfit');
+    if(chartProfit) {
+      setC(COL.text); pdf.setFontSize(10); pdf.setFont('helvetica','bold');
+      pdf.text('Spend vs Revenue vs Profit', m, y+2);
+      pdf.addImage(chartProfit, 'PNG', m, y+4, cW*0.45, 60);
+    }
+
+    // Sales table alongside
+    const tblX = m + cW*0.48;
+    const tblW = cW*0.52;
+    setC(COL.text); pdf.setFontSize(10); pdf.setFont('helvetica','bold');
+    pdf.text('Sales Orders', tblX, y+2);
+    let ty = y + 6;
+
+    // Sales table header
+    setF([240,242,248]); pdf.rect(tblX, ty, tblW, 5, 'F');
+    setC(COL.sub); pdf.setFontSize(6.5); pdf.setFont('helvetica','bold');
+    pdf.text('#', tblX+1, ty+3.5);
+    pdf.text('Customer', tblX+8, ty+3.5);
+    pdf.text('Source', tblX+55, ty+3.5);
+    pdf.text('Invoice', tblX+100, ty+3.5);
+    pdf.text('Date', tblX+120, ty+3.5);
+    pdf.text('Amount', tblX+tblW-2, ty+3.5, {align:'right'});
+    ty += 6;
+
+    pdf.setFont('helvetica','normal'); pdf.setFontSize(6);
+    let salesTot = 0;
+    salesData.forEach((s,i) => {
+      if(ty > H-18) {
+        drawPageFooter(); pdf.addPage('a4','landscape'); drawPageHeader('Cost vs Sales (cont.)'); ty=16;
+      }
+      if(i%2===0){ setF([250,251,253]); pdf.rect(tblX, ty-1, tblW, 5, 'F'); }
+      salesTot += s.amount;
+      setC(COL.muted); pdf.text(String(i+1), tblX+1, ty+3);
+      setC(COL.text); pdf.setFont('helvetica','bold'); pdf.text(s.customer.slice(0,30), tblX+8, ty+3);
+      pdf.setFont('helvetica','normal');
+      setC(COL.muted); pdf.text(s.ad_id.slice(0,25), tblX+55, ty+3);
+      setC(COL.text); pdf.text(s.invoice, tblX+100, ty+3);
+      pdf.text(s.date, tblX+120, ty+3);
+      setC(COL.green); pdf.setFont('helvetica','bold');
+      pdf.text(fd(s.amount), tblX+tblW-2, ty+3, {align:'right'});
+      pdf.setFont('helvetica','normal');
+      ty += 5;
+    });
+    // Total row
+    setF([236,253,245]); pdf.rect(tblX, ty-1, tblW, 6, 'F');
+    setC(COL.text); pdf.setFontSize(7); pdf.setFont('helvetica','bold');
+    pdf.text('TOTAL', tblX+8, ty+3);
+    setC(COL.green); pdf.text(fd(salesTot), tblX+tblW-2, ty+3, {align:'right'});
+    drawPageFooter();
+
+    // ==================== PAGE 4: ACTION PLAN ====================
+    pdf.addPage('a4','landscape');
+    drawPageHeader('Action Plan');
+    y = 16;
+
+    // Key Findings
+    setC(COL.text); pdf.setFontSize(11); pdf.setFont('helvetica','bold');
+    pdf.text('Key Findings This Month', m, y+2); y += 7;
+
+    const convRate = tl>0?salesData.length/tl*100:0;
+    const avgCPL = tl>0?leadS/tl:0;
+    const revPerLead = tl>0?tr/tl:0;
+    const bestLeadC = leads.filter(c=>c.cpr>0).sort((a,b)=>a.cpr-b.cpr)[0];
+    const worstLeadC = leads.filter(c=>c.cpr>0).sort((a,b)=>b.cpr-a.cpr)[0];
+    const awareSpend = aware.reduce((s,c)=>s+c.spend,0);
+    const awareReach = aware.reduce((s,c)=>s+c.reach,0);
+    const awareCPM = awareReach>0?awareSpend/awareReach*1000:0;
+
+    // Finding cards in 2x3 grid
+    const fW = (cW-8)/3;
+    const fH = 28;
+    const findings = [
+      {title:'Overall Profitability',metric:(profit>=0?'+':'')+fd(profit),body:'Spend '+fd(ts)+' generated '+fd(tr)+'. ROI: '+fp(roi),col:profit>=0?COL.green:COL.red},
+      {title:'Avg Cost per Lead',metric:fd(avgCPL),body:fn(tl)+' leads across '+leads.length+' campaigns.',col:avgCPL<25?COL.green:avgCPL<35?COL.yellow:COL.red},
+      {title:'Lead to Sale Conversion',metric:fp(convRate),body:salesData.length+' sales from '+fn(tl)+' leads. Rev/lead: '+fd(revPerLead),col:convRate>2?COL.green:COL.yellow},
+      {title:'Top Campaign',metric:bestLeadC?fd(bestLeadC.cpr)+'/lead':'N/A',body:bestLeadC?bestLeadC.campaign.slice(0,50):'',col:COL.green},
+      {title:'Underperformer',metric:worstLeadC&&worstLeadC!==bestLeadC?fd(worstLeadC.cpr)+'/lead':'N/A',body:worstLeadC&&worstLeadC!==bestLeadC?worstLeadC.campaign.slice(0,50):'',col:COL.red},
+      {title:'Awareness Efficiency',metric:fd(awareCPM)+' CPM',body:aware.length+' campaigns reaching '+fn(awareReach)+' people for '+fd(awareSpend),col:COL.blue}
+    ];
+    findings.forEach((f,i) => {
+      const fx = m + (i%3)*(fW+4);
+      const fy = y + Math.floor(i/3)*(fH+3);
+      setF(COL.card); setD(COL.border); pdf.roundedRect(fx, fy, fW, fH, 2, 2, 'FD');
+      setF(f.col); pdf.rect(fx, fy, 2, fH, 'F');
+      setC(COL.text); pdf.setFontSize(8); pdf.setFont('helvetica','bold');
+      pdf.text(f.title, fx+5, fy+6);
+      setC(f.col); pdf.setFontSize(12); pdf.setFont('helvetica','bold');
+      pdf.text(f.metric, fx+5, fy+14);
+      setC(COL.sub); pdf.setFontSize(6.5); pdf.setFont('helvetica','normal');
+      const bodyLines = pdf.splitTextToSize(f.body, fW-8);
+      bodyLines.slice(0,3).forEach((line,li) => pdf.text(line, fx+5, fy+19+li*3));
+    });
+    y += Math.ceil(findings.length/3)*(fH+3) + 5;
+
+    // 30-Day Action Steps
+    if(y > H - 40) {
+      drawPageFooter(); pdf.addPage('a4','landscape'); drawPageHeader('Action Plan (cont.)'); y = 16;
+    }
+    setC(COL.text); pdf.setFontSize(11); pdf.setFont('helvetica','bold');
+    pdf.text('30-Day Action Plan', m, y+2); y += 7;
+
+    // Build steps from same logic as renderActionPlan
+    const steps = [];
+    if(bestLeadC && worstLeadC && worstLeadC.cpr > bestLeadC.cpr * 2) {
+      steps.push({title:'Reallocate Budget from Underperformers',body:'Shift '+fd(worstLeadC.spend*0.3)+' from '+worstLeadC.campaign.slice(0,35)+' ('+fd(worstLeadC.cpr)+'/lead) to '+bestLeadC.campaign.slice(0,35)+' ('+fd(bestLeadC.cpr)+'/lead). Est. '+fn(Math.round(worstLeadC.spend*0.3/bestLeadC.cpr))+' extra leads.',pri:'HIGH',col:COL.red});
+    }
+    const lowQ = campaigns.filter(c=>c.quality&&c.quality.toLowerCase().includes('below'));
+    if(lowQ.length) {
+      steps.push({title:'Refresh Low Quality Creatives',body:lowQ.length+' campaign(s) below average: '+lowQ.map(c=>c.campaign.slice(0,25)).join(', ')+'. A/B test 2-3 new variations.',pri:'HIGH',col:COL.red});
+    }
+    const worstCTR = [...campaigns].filter(c=>c.ctr>0.01).sort((a,b)=>a.ctr-b.ctr)[0];
+    if(worstCTR && worstCTR.ctr<1) {
+      steps.push({title:'Improve Click-Through Rates',body:worstCTR.campaign.slice(0,35)+' has lowest CTR at '+fp(worstCTR.ctr)+'. Test new headlines, CTAs, and lead magnets.',pri:'MED',col:COL.yellow});
+    }
+    if(convRate<3) {
+      steps.push({title:'Improve Lead Follow-Up',body:fp(convRate)+' lead-to-sale rate. Respond within 1hr, set up Klaviyo nurture, add SMS at Day 3, review form questions.',pri:'HIGH',col:COL.red});
+    }
+    if(bestLeadC) {
+      steps.push({title:'Scale Best Campaign',body:bestLeadC.campaign.slice(0,35)+' at '+fd(bestLeadC.cpr)+'/lead. Increase budget 20%, monitor 5 days. Target: '+fn(Math.round(bestLeadC.results*1.4))+' leads.',pri:'MED',col:COL.yellow});
+    }
+    steps.push({title:'Build Lookalike Audiences',body:salesData.length+' buyers. Upload to Meta, create 1% Lookalike. Test in best campaign.',pri:'MED',col:COL.yellow});
+    const totalClicks=campaigns.reduce((s,c)=>s+c.linkClicks,0);
+    const totalLP=campaigns.reduce((s,c)=>s+c.lpViews,0);
+    const lpRate=totalClicks>0?totalLP/totalClicks*100:0;
+    if(lpRate>0&&lpRate<50) {
+      steps.push({title:'Fix Landing Page Drop-Off',body:'Only '+fp(lpRate)+' of clicks reach landing page. Check load speed (<3s), mobile responsiveness, headline match.',pri:'HIGH',col:COL.red});
+    }
+    if(aware.length&&leads.length) {
+      steps.push({title:'Retarget Awareness Audiences',body:fn(awareReach)+' people reached. Create retargeting lead-gen campaign for engaged users. 2-3x better conversion.',pri:'MED',col:COL.yellow});
+    }
+    steps.push({title:'Set Next Month Targets',body:fn(Math.round(tl*1.25))+' leads (+25%), '+Math.round(salesData.length*1.3)+' sales (+30%), '+fd(tr*1.3)+' revenue. Track weekly.',pri:'SET',col:COL.blue});
+
+    steps.forEach((s,i) => {
+      if(y > H-18) {
+        drawPageFooter(); pdf.addPage('a4','landscape'); drawPageHeader('Action Plan (cont.)'); y=16;
+      }
+      // Step row
+      setF(COL.card); setD(COL.border); pdf.roundedRect(m, y, cW, 12, 1.5, 1.5, 'FD');
+      setF(s.col); pdf.rect(m, y, 2, 12, 'F');
+      // Priority badge
+      setF(s.col); pdf.roundedRect(W-m-20, y+1, 18, 4.5, 1, 1, 'F');
+      setC(COL.white); pdf.setFontSize(5.5); pdf.setFont('helvetica','bold');
+      pdf.text(s.pri, W-m-11, y+4, {align:'center'});
+      // Title
+      setC(COL.text); pdf.setFontSize(8); pdf.setFont('helvetica','bold');
+      pdf.text((i+1)+'. '+s.title, m+5, y+5);
+      // Body
+      setC(COL.sub); pdf.setFontSize(6.5); pdf.setFont('helvetica','normal');
+      const bLines = pdf.splitTextToSize(s.body, cW-30);
+      bLines.slice(0,2).forEach((line,li) => pdf.text(line, m+5, y+9+li*3));
+      y += 14;
+    });
+
+    // KPIs to Track
+    if(y > H-35) {
+      drawPageFooter(); pdf.addPage('a4','landscape'); drawPageHeader('Action Plan (KPIs)'); y=16;
+    }
+    y += 3;
+    setC(COL.text); pdf.setFontSize(11); pdf.setFont('helvetica','bold');
+    pdf.text('KPIs to Track Next Month', m, y+2); y += 7;
+    const tkW = (cW-6)/4;
+    const trackKpis = [
+      {title:'Target CPL',metric:'Under '+fd(avgCPL*0.85),body:'15% reduction from '+fd(avgCPL)},
+      {title:'Target Conv. Rate',metric:fp(Math.max(convRate*1.5,3)),body:'Up from '+fp(convRate)},
+      {title:'Target ROAS',metric:ts>0?((tr*1.3/ts).toFixed(2)+'x'):'N/A',body:'Currently '+(ts>0?((tr/ts).toFixed(2)+'x'):'N/A')},
+      {title:'Target Revenue',metric:fd(tr*1.3),body:'30% increase from '+fd(tr)}
+    ];
+    trackKpis.forEach((k,i) => {
+      const kx = m+i*(tkW+2);
+      setF(COL.card); setD(COL.border); pdf.roundedRect(kx, y, tkW, 22, 2, 2, 'FD');
+      setC(COL.text); pdf.setFontSize(8); pdf.setFont('helvetica','bold');
+      pdf.text(k.title, kx+4, y+6);
+      setC(COL.accent); pdf.setFontSize(13); pdf.setFont('helvetica','bold');
+      pdf.text(k.metric, kx+4, y+14);
+      setC(COL.sub); pdf.setFontSize(6.5); pdf.setFont('helvetica','normal');
+      pdf.text(k.body, kx+4, y+19);
+    });
+    drawPageFooter();
+
+    // Save
+    const d = new Date();
+    const ds = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    pdf.save('Savwinch_Meta_Ads_Report_'+ds+'.pdf');
+    showToast('PDF report downloaded');
+
+  } catch(err) {
+    console.error('PDF export error:', err);
+    showToast('PDF error: '+err.message, true);
+  } finally {
+    btn.innerHTML = origText;
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
