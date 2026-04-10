@@ -1745,55 +1745,59 @@ async function exportShareable() {
       const resp = await fetch(location.href);
       srcHTML = await resp.text();
     } catch(e) {
-      // Fallback for local files: reconstruct from DOCTYPE + outerHTML
       srcHTML = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
     }
 
-    // Build embedded data block as a self-contained script
-    const dataBlock = {
-      campaigns: campaigns,
-      salesData: salesData,
-      campImages: campImages
-    };
-    const jsonPayload = JSON.stringify(dataBlock);
+    // Normalize campImages keys to strings for consistent JSON round-trip
+    const imgExport = {};
+    Object.keys(campImages).forEach(function(k) { imgExport[String(k)] = campImages[k]; });
 
-    // Inject a data-payload script tag right before </head>
-    // This script runs before DOMContentLoaded fires and seeds the data
-    const payloadScript = `
-<script id="embedded-data">
-(function(){
-  window.__EMBEDDED_DATA__ = ${jsonPayload};
-})();
-<\/script>
-`;
-    // Insert payload before closing </head>
-    let newHTML = srcHTML.replace('</head>', payloadScript + '</head>');
+    // Count images for feedback
+    const imgCount = Object.keys(imgExport).length;
 
-    // Now patch the DOMContentLoaded handler to check for embedded data first
-    // Find existing DOMContentLoaded block and add embedded data loading
-    const embedLoader = `
-  // Check for embedded data (from Export Dashboard)
-  if(window.__EMBEDDED_DATA__) {
-    const d = window.__EMBEDDED_DATA__;
-    campaigns = d.campaigns || [];
-    salesData = d.salesData || [];
-    campImages = d.campImages || {};
-    renderAll();
-    // Restore images
-    setTimeout(function(){ Object.keys(campImages).forEach(function(idx){ updateImgZone(parseInt(idx)); }); }, 200);
-    showToast('Dashboard loaded');
-    delete window.__EMBEDDED_DATA__;
-    return;
-  }
-`;
+    // Build the replacement loadDemoData function with all data baked in
+    const campJSON = JSON.stringify(campaigns);
+    const salesJSON = JSON.stringify(salesData);
+    // Base64-encode the images JSON to avoid any HTML/script escaping issues
+    const imgRaw = JSON.stringify(imgExport);
+    const imgB64 = btoa(unescape(encodeURIComponent(imgRaw)));
 
-    // Inject right after DOMContentLoaded async function opens
+    const newDemoFn = [
+      'function loadDemoData(){',
+      '  campaigns=' + campJSON + ';',
+      '  salesData=' + salesJSON + ';',
+      '  try{campImages=JSON.parse(decodeURIComponent(escape(atob("' + imgB64 + '"))));}catch(e){campImages={};}',
+      '  // Normalize keys to integers for updateImgZone compatibility',
+      '  var fixed={};Object.keys(campImages).forEach(function(k){fixed[parseInt(k)]=campImages[k];});campImages=fixed;',
+      '  renderAll();saveSessionData();saveCampImages();',
+      '  setTimeout(function(){Object.keys(campImages).forEach(function(idx){updateImgZone(parseInt(idx));});},300);',
+      '  showToast("Dashboard loaded with ' + imgCount + ' image' + (imgCount!==1?'s':'') + '");',
+      '}'
+    ].join('\n');
+
+    // Replace the loadDemoData function in the clean source
+    const demoRegex = /function loadDemoData\(\)\s*\{[\s\S]*?\nshowToast\([^)]+\);\s*\n\}/;
+    let newHTML;
+    if(demoRegex.test(srcHTML)) {
+      newHTML = srcHTML.replace(demoRegex, newDemoFn);
+    } else {
+      // Fallback: try a simpler regex
+      const simpleRegex = /function loadDemoData\(\)\{[\s\S]*?\n\}/;
+      if(simpleRegex.test(srcHTML)) {
+        newHTML = srcHTML.replace(simpleRegex, newDemoFn);
+      } else {
+        throw new Error('Could not find loadDemoData in source');
+      }
+    }
+
+    // Also make loadDemoData auto-run instead of requiring button click
+    // Replace the DOMContentLoaded to always call loadDemoData
     newHTML = newHTML.replace(
-      "document.addEventListener('DOMContentLoaded', async function() {",
-      "document.addEventListener('DOMContentLoaded', async function() {" + embedLoader
+      "if(!campaigns.length) loadDemoData();",
+      "loadDemoData();"
     );
 
-    // Download as index.html
+    // Download
     const blob = new Blob([newHTML], {type:'text/html'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1803,7 +1807,7 @@ async function exportShareable() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast('index.html downloaded — drag into Netlify Drop to share');
+    showToast('Exported with ' + imgCount + ' image' + (imgCount!==1?'s':'') + '. Upload to GitHub to share.');
   } catch(err) {
     console.error('Export error:', err);
     showToast('Export failed: ' + err.message, true);
